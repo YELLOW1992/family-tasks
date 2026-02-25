@@ -1,88 +1,102 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import {
+  collection, doc, addDoc, updateDoc, deleteDoc,
+  setDoc, runTransaction, serverTimestamp
+} from 'firebase/firestore'
+import { db } from '../firebase'
 
-const useStore = create(
-  persist(
-    (set, get) => ({
-      pin: null,
-      children: [],
-      tasks: [],
-      rewards: [],
-      redemptions: [],
+const useStore = create((set, get) => ({
+  pin: null,
+  children: [],
+  tasks: [],
+  rewards: [],
+  redemptions: [],
 
-      // PIN
-      setPin: (pin) => set({ pin }),
-      verifyPin: (pin) => get().pin === pin,
+  // PIN
+  setPin: async (pin) => {
+    await setDoc(doc(db, 'config', 'family'), { pin }, { merge: true })
+  },
+  verifyPin: (input) => get().pin === input,
 
-      // Children
-      addChild: (child) =>
-        set((s) => ({ children: [...s.children, { ...child, id: crypto.randomUUID(), points: 0 }] })),
-      updateChild: (id, data) =>
-        set((s) => ({ children: s.children.map((c) => (c.id === id ? { ...c, ...data } : c)) })),
-      removeChild: (id) =>
-        set((s) => ({ children: s.children.filter((c) => c.id !== id) })),
+  // Children
+  addChild: async (child) => {
+    await addDoc(collection(db, 'children'), { ...child, points: 0 })
+  },
+  updateChild: async (id, data) => {
+    await updateDoc(doc(db, 'children', id), data)
+  },
+  removeChild: async (id) => {
+    await deleteDoc(doc(db, 'children', id))
+  },
 
-      // Tasks
-      addTask: (task) =>
-        set((s) => ({
-          tasks: [
-            ...s.tasks,
-            { ...task, id: crypto.randomUUID(), status: 'pending', createdAt: new Date().toISOString() },
-          ],
-        })),
-      updateTask: (id, data) =>
-        set((s) => ({ tasks: s.tasks.map((t) => (t.id === id ? { ...t, ...data } : t)) })),
-      deleteTask: (id) =>
-        set((s) => ({ tasks: s.tasks.filter((t) => t.id !== id) })),
-      markTaskDone: (id) =>
-        set((s) => ({ tasks: s.tasks.map((t) => (t.id === id ? { ...t, status: 'done' } : t)) })),
-      approveTask: (id) =>
-        set((s) => {
-          const task = s.tasks.find((t) => t.id === id)
-          if (!task) return {}
-          return {
-            tasks: s.tasks.map((t) => (t.id === id ? { ...t, status: 'approved' } : t)),
-            children: s.children.map((c) =>
-              c.id === task.assignedTo ? { ...c, points: c.points + task.points } : c
-            ),
-          }
-        }),
-      rejectTask: (id) =>
-        set((s) => ({ tasks: s.tasks.map((t) => (t.id === id ? { ...t, status: 'rejected' } : t)) })),
+  // Tasks
+  addTask: async (task) => {
+    await addDoc(collection(db, 'tasks'), {
+      ...task,
+      status: 'pending',
+      createdAt: serverTimestamp(),
+    })
+  },
+  updateTask: async (id, data) => {
+    await updateDoc(doc(db, 'tasks', id), data)
+  },
+  deleteTask: async (id) => {
+    await deleteDoc(doc(db, 'tasks', id))
+  },
+  markTaskDone: async (id) => {
+    await updateDoc(doc(db, 'tasks', id), { status: 'done' })
+  },
+  approveTask: async (id) => {
+    await runTransaction(db, async (tx) => {
+      const taskRef = doc(db, 'tasks', id)
+      const taskSnap = await tx.get(taskRef)
+      if (!taskSnap.exists()) return
+      const task = taskSnap.data()
+      const childRef = doc(db, 'children', task.assignedTo)
+      const childSnap = await tx.get(childRef)
+      if (!childSnap.exists()) return
+      tx.update(taskRef, { status: 'approved' })
+      tx.update(childRef, { points: (childSnap.data().points || 0) + task.points })
+    })
+  },
+  rejectTask: async (id) => {
+    await updateDoc(doc(db, 'tasks', id), { status: 'rejected' })
+  },
 
-      // Rewards
-      addReward: (reward) =>
-        set((s) => ({
-          rewards: [...s.rewards, { ...reward, id: crypto.randomUUID(), available: true }],
-        })),
-      updateReward: (id, data) =>
-        set((s) => ({ rewards: s.rewards.map((r) => (r.id === id ? { ...r, ...data } : r)) })),
-      deleteReward: (id) =>
-        set((s) => ({ rewards: s.rewards.filter((r) => r.id !== id) })),
+  // Rewards
+  addReward: async (reward) => {
+    await addDoc(collection(db, 'rewards'), { ...reward, available: true })
+  },
+  updateReward: async (id, data) => {
+    await updateDoc(doc(db, 'rewards', id), data)
+  },
+  deleteReward: async (id) => {
+    await deleteDoc(doc(db, 'rewards', id))
+  },
 
-      // Redemptions
-      redeemReward: (rewardId, childId) =>
-        set((s) => {
-          const reward = s.rewards.find((r) => r.id === rewardId)
-          const child = s.children.find((c) => c.id === childId)
-          if (!reward || !child || child.points < reward.cost) return {}
-          return {
-            redemptions: [
-              ...s.redemptions,
-              { id: crypto.randomUUID(), rewardId, childId, redeemedAt: new Date().toISOString(), status: 'pending' },
-            ],
-            children: s.children.map((c) =>
-              c.id === childId ? { ...c, points: c.points - reward.cost } : c
-            ),
-          }
-        }),
-      fulfillRedemption: (id) =>
-        set((s) => ({
-          redemptions: s.redemptions.map((r) => (r.id === id ? { ...r, status: 'fulfilled' } : r)),
-        })),
-    }),
-    { name: 'family-tasks-store' }
-  )
-)
+  // Redemptions
+  redeemReward: async (rewardId, childId) => {
+    await runTransaction(db, async (tx) => {
+      const rewardRef = doc(db, 'rewards', rewardId)
+      const childRef = doc(db, 'children', childId)
+      const [rewardSnap, childSnap] = await Promise.all([tx.get(rewardRef), tx.get(childRef)])
+      if (!rewardSnap.exists() || !childSnap.exists()) return
+      const reward = rewardSnap.data()
+      const child = childSnap.data()
+      if (!reward.available || child.points < reward.cost) return
+      const redemptionRef = doc(collection(db, 'redemptions'))
+      tx.set(redemptionRef, {
+        rewardId,
+        childId,
+        redeemedAt: serverTimestamp(),
+        status: 'pending',
+      })
+      tx.update(childRef, { points: child.points - reward.cost })
+    })
+  },
+  fulfillRedemption: async (id) => {
+    await updateDoc(doc(db, 'redemptions', id), { status: 'fulfilled' })
+  },
+}))
 
 export default useStore
