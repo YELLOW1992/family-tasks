@@ -1,9 +1,5 @@
 import { create } from 'zustand'
-import {
-  collection, doc, addDoc, updateDoc, deleteDoc,
-  setDoc, runTransaction, serverTimestamp
-} from 'firebase/firestore'
-import { db } from '../firebase'
+import { supabase } from '../supabase'
 
 const useStore = create((set, get) => ({
   pin: null,
@@ -14,88 +10,86 @@ const useStore = create((set, get) => ({
 
   // PIN
   setPin: async (pin) => {
-    await setDoc(doc(db, 'config', 'family'), { pin }, { merge: true })
+    await supabase.from('config').upsert({ key: 'pin', value: pin })
   },
   verifyPin: (input) => get().pin === input,
 
   // Children
   addChild: async (child) => {
-    await addDoc(collection(db, 'children'), { ...child, points: 0 })
+    await supabase.from('children').insert({ ...child, points: 0 })
   },
   updateChild: async (id, data) => {
-    await updateDoc(doc(db, 'children', id), data)
+    await supabase.from('children').update(data).eq('id', id)
   },
   removeChild: async (id) => {
-    await deleteDoc(doc(db, 'children', id))
+    await supabase.from('children').delete().eq('id', id)
   },
 
   // Tasks
   addTask: async (task) => {
-    await addDoc(collection(db, 'tasks'), {
-      ...task,
+    await supabase.from('tasks').insert({
+      title: task.title,
+      description: task.description,
+      points: task.points,
+      assigned_to: task.assignedTo,
+      due_date: task.dueDate,
       status: 'pending',
-      createdAt: serverTimestamp(),
     })
   },
   updateTask: async (id, data) => {
-    await updateDoc(doc(db, 'tasks', id), data)
+    const mapped = {}
+    if (data.title !== undefined) mapped.title = data.title
+    if (data.description !== undefined) mapped.description = data.description
+    if (data.points !== undefined) mapped.points = data.points
+    if (data.assignedTo !== undefined) mapped.assigned_to = data.assignedTo
+    if (data.dueDate !== undefined) mapped.due_date = data.dueDate
+    if (data.status !== undefined) mapped.status = data.status
+    await supabase.from('tasks').update(mapped).eq('id', id)
   },
   deleteTask: async (id) => {
-    await deleteDoc(doc(db, 'tasks', id))
+    await supabase.from('tasks').delete().eq('id', id)
   },
   markTaskDone: async (id) => {
-    await updateDoc(doc(db, 'tasks', id), { status: 'done' })
+    await supabase.from('tasks').update({ status: 'done' }).eq('id', id)
   },
   approveTask: async (id) => {
-    await runTransaction(db, async (tx) => {
-      const taskRef = doc(db, 'tasks', id)
-      const taskSnap = await tx.get(taskRef)
-      if (!taskSnap.exists()) return
-      const task = taskSnap.data()
-      const childRef = doc(db, 'children', task.assignedTo)
-      const childSnap = await tx.get(childRef)
-      if (!childSnap.exists()) return
-      tx.update(taskRef, { status: 'approved' })
-      tx.update(childRef, { points: (childSnap.data().points || 0) + task.points })
-    })
+    const task = get().tasks.find((t) => t.id === id)
+    if (!task) return
+    const child = get().children.find((c) => c.id === task.assignedTo)
+    if (!child) return
+    await supabase.from('tasks').update({ status: 'approved' }).eq('id', id)
+    await supabase.from('children').update({ points: (child.points || 0) + task.points }).eq('id', child.id)
   },
   rejectTask: async (id) => {
-    await updateDoc(doc(db, 'tasks', id), { status: 'rejected' })
+    await supabase.from('tasks').update({ status: 'rejected' }).eq('id', id)
   },
 
   // Rewards
   addReward: async (reward) => {
-    await addDoc(collection(db, 'rewards'), { ...reward, available: true })
+    await supabase.from('rewards').insert({ ...reward, available: true })
   },
   updateReward: async (id, data) => {
-    await updateDoc(doc(db, 'rewards', id), data)
+    await supabase.from('rewards').update(data).eq('id', id)
   },
   deleteReward: async (id) => {
-    await deleteDoc(doc(db, 'rewards', id))
+    await supabase.from('rewards').delete().eq('id', id)
   },
 
   // Redemptions
   redeemReward: async (rewardId, childId) => {
-    await runTransaction(db, async (tx) => {
-      const rewardRef = doc(db, 'rewards', rewardId)
-      const childRef = doc(db, 'children', childId)
-      const [rewardSnap, childSnap] = await Promise.all([tx.get(rewardRef), tx.get(childRef)])
-      if (!rewardSnap.exists() || !childSnap.exists()) return
-      const reward = rewardSnap.data()
-      const child = childSnap.data()
-      if (!reward.available || child.points < reward.cost) return
-      const redemptionRef = doc(collection(db, 'redemptions'))
-      tx.set(redemptionRef, {
-        rewardId,
-        childId,
-        redeemedAt: serverTimestamp(),
-        status: 'pending',
-      })
-      tx.update(childRef, { points: child.points - reward.cost })
+    const reward = get().rewards.find((r) => r.id === rewardId)
+    const child = get().children.find((c) => c.id === childId)
+    if (!reward || !child) return
+    if (!reward.available || child.points < reward.cost) return
+    await supabase.from('redemptions').insert({
+      reward_id: rewardId,
+      child_id: childId,
+      status: 'pending',
     })
+    await supabase.from('children').update({ points: child.points - reward.cost }).eq('id', childId)
   },
   fulfillRedemption: async (id) => {
-    await updateDoc(doc(db, 'redemptions', id), { status: 'fulfilled' })
+    await supabase.from('redemptions').update({ status: 'fulfilled' }).eq('id', id)
   },
 }))
 
