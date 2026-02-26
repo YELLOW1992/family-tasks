@@ -1,15 +1,16 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import useStore from '../../store/useStore'
 import Avatar from '../common/Avatar'
 import ConfirmModal from '../common/ConfirmModal'
 
-const AVATARS = ['🧒','👦','👧','🧑','👩','👨','🧔','👴','👵','🧕','👲','🎅']
+const AVATARS = ['🧒','👦','👧','🧑','👩','👨','🧔','👴','👵','🧕','👲','🎅','🐶','🐱','🐼','🦊','🐸','🐯','🦁','🐨','🐻','🐰','🐧','🦄']
 
 export default function ChildProfiles() {
   const { children, addChild, updateChild, removeChild } = useStore()
-  const [editing, setEditing] = useState(null) // null | 'new' | child id
+  const [editing, setEditing] = useState(null)
   const [form, setForm] = useState({ name: '', avatar: '🧒' })
   const [confirmDelete, setConfirmDelete] = useState(null)
+  const fileRef = useRef()
 
   const openNew = () => { setForm({ name: '', avatar: '🧒' }); setEditing('new') }
   const openEdit = (c) => { setForm({ name: c.name, avatar: c.avatar }); setEditing(c.id) }
@@ -20,6 +21,29 @@ export default function ChildProfiles() {
     if (editing === 'new') addChild(form)
     else updateChild(editing, form)
     close()
+  }
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const size = 200
+        canvas.width = size
+        canvas.height = size
+        const ctx = canvas.getContext('2d')
+        const min = Math.min(img.width, img.height)
+        const sx = (img.width - min) / 2
+        const sy = (img.height - min) / 2
+        ctx.drawImage(img, sx, sy, min, min, 0, 0, size, size)
+        setForm((f) => ({ ...f, avatar: canvas.toDataURL('image/jpeg', 0.7) }))
+      }
+      img.src = ev.target.result
+    }
+    reader.readAsDataURL(file)
   }
 
   return (
@@ -54,7 +78,7 @@ export default function ChildProfiles() {
 
       {editing !== null && (
         <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
-          <div className="bg-white rounded-t-3xl p-8 w-full max-w-lg">
+          <div className="bg-white rounded-t-3xl p-8 w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <h3 className="text-2xl font-bold mb-6">{editing === 'new' ? '添加孩子' : '编辑孩子'}</h3>
             <input
               className="w-full border-2 border-gray-200 rounded-2xl px-5 py-4 text-xl mb-6 focus:border-indigo-400 outline-none"
@@ -62,7 +86,20 @@ export default function ChildProfiles() {
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
             />
-            <p className="font-semibold text-gray-600 mb-3">选择头像</p>
+
+            <p className="font-semibold text-gray-600 mb-3">当前头像</p>
+            <div className="flex items-center gap-4 mb-6">
+              <Avatar emoji={form.avatar} size="md" />
+              <button
+                onClick={() => fileRef.current.click()}
+                className="px-5 py-3 rounded-2xl bg-indigo-100 text-indigo-700 font-semibold active:bg-indigo-200"
+              >
+                📷 上传照片
+              </button>
+              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+            </div>
+
+            <p className="font-semibold text-gray-600 mb-3">或选择 Emoji</p>
             <div className="flex flex-wrap gap-3 mb-8">
               {AVATARS.map((a) => (
                 <button key={a} onClick={() => setForm((f) => ({ ...f, avatar: a }))}
@@ -71,6 +108,7 @@ export default function ChildProfiles() {
                 </button>
               ))}
             </div>
+
             <div className="flex gap-4">
               <button onClick={close} className="flex-1 py-4 rounded-2xl bg-gray-100 text-gray-700 text-lg font-semibold">取消</button>
               <button onClick={handleSave} className="flex-1 py-4 rounded-2xl bg-indigo-600 text-white text-lg font-semibold active:bg-indigo-700">保存</button>
