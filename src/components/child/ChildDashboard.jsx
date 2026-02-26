@@ -3,6 +3,7 @@ import useStore from '../../store/useStore'
 import Avatar from '../common/Avatar'
 import TaskList from './TaskList'
 import RewardShop from './RewardShop'
+import { refreshData } from '../../supabaseSync'
 
 const TABS = [
   { id: 'tasks', label: '任务', icon: '📋' },
@@ -11,8 +12,15 @@ const TABS = [
 
 export default function ChildDashboard({ child, onExit }) {
   const [tab, setTab] = useState('tasks')
+  const [refreshing, setRefreshing] = useState(false)
   const currentChild = useStore((s) => s.children.find((c) => c.id === child.id))
   const points = currentChild?.points ?? child.points
+
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    await refreshData()
+    setRefreshing(false)
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -20,6 +28,9 @@ export default function ChildDashboard({ child, onExit }) {
         <div className="flex items-center justify-between mb-4">
           <button onClick={onExit} className="bg-white/30 text-white px-4 py-2 rounded-xl font-semibold active:bg-white/40">
             ← 切换
+          </button>
+          <button onClick={handleRefresh} disabled={refreshing} className="bg-white/30 text-white px-4 py-2 rounded-xl font-semibold active:bg-white/40 disabled:opacity-50">
+            {refreshing ? '刷新中...' : '🔄 刷新'}
           </button>
         </div>
         <div className="flex items-center gap-4">
