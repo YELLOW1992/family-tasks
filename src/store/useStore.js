@@ -120,7 +120,7 @@ const useStore = create((set, get) => ({
     const child = get().children.find((c) => c.id === task.assignedTo)
     if (!child) return
     const newStatus = task.repeat === 'daily' ? 'pending' : 'approved'
-    const newPoints = (child.points || 0) + task.points
+    const newPoints = Math.max(0, (child.points || 0) + task.points)
     await supabase.from('tasks').update({ status: newStatus, photo: null }).eq('id', id)
     await supabase.from('children').update({ points: newPoints }).eq('id', child.id)
     set({ tasks: await fetchTasks(), children: await fetchChildren() })
