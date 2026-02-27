@@ -1,6 +1,26 @@
 import { supabase } from './supabase'
 import useStore from './store/useStore'
 
+function mapTask(t) {
+  return {
+    ...t,
+    assignedTo: t.assigned_to,
+    dueDate: t.due_date,
+    createdAt: t.created_at,
+    repeat: t.repeat || 'none',
+    last_submitted_date: t.last_submitted_date || null,
+  }
+}
+
+function mapRedemption(r) {
+  return {
+    ...r,
+    rewardId: r.reward_id,
+    childId: r.child_id,
+    redeemedAt: r.redeemed_at,
+  }
+}
+
 async function loadAll() {
   const set = useStore.setState
   const [config, children, tasks, rewards, redemptions] = await Promise.all([
@@ -14,18 +34,20 @@ async function loadAll() {
   set({
     pin,
     children: children.data || [],
-    tasks: (tasks.data || []).map((t) => ({ ...t, assignedTo: t.assigned_to, dueDate: t.due_date, createdAt: t.created_at })),
+    tasks: (tasks.data || []).map(mapTask),
     rewards: rewards.data || [],
-    redemptions: (redemptions.data || []).map((r) => ({ ...r, rewardId: r.reward_id, childId: r.child_id, redeemedAt: r.redeemed_at })),
+    redemptions: (redemptions.data || []).map(mapRedemption),
   })
 }
 
 export async function refreshData() {
   await loadAll()
+  await useStore.getState().checkDailyTasks()
 }
 
 export async function startSupabaseSync() {
   await loadAll()
+  await useStore.getState().checkDailyTasks()
 
   const set = useStore.setState
 
@@ -41,7 +63,7 @@ export async function startSupabaseSync() {
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, async () => {
       const { data } = await supabase.from('tasks').select('*')
-      set({ tasks: (data || []).map((t) => ({ ...t, assignedTo: t.assigned_to, dueDate: t.due_date, createdAt: t.created_at })) })
+      set({ tasks: (data || []).map(mapTask) })
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'rewards' }, async () => {
       const { data } = await supabase.from('rewards').select('*')
@@ -49,7 +71,7 @@ export async function startSupabaseSync() {
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'redemptions' }, async () => {
       const { data } = await supabase.from('redemptions').select('*')
-      set({ redemptions: (data || []).map((r) => ({ ...r, rewardId: r.reward_id, childId: r.child_id, redeemedAt: r.redeemed_at })) })
+      set({ redemptions: (data || []).map(mapRedemption) })
     })
     .subscribe()
 }

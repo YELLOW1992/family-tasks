@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import { supabase } from '../supabase'
 
+const today = () => new Date().toISOString().slice(0, 10)
+
 const useStore = create((set, get) => ({
   pin: null,
   children: [],
@@ -34,6 +36,8 @@ const useStore = create((set, get) => ({
       assigned_to: task.assignedTo,
       due_date: task.dueDate,
       status: 'pending',
+      repeat: task.repeat || 'none',
+      last_submitted_date: null,
     })
   },
   updateTask: async (id, data) => {
@@ -44,24 +48,44 @@ const useStore = create((set, get) => ({
     if (data.assignedTo !== undefined) mapped.assigned_to = data.assignedTo
     if (data.dueDate !== undefined) mapped.due_date = data.dueDate
     if (data.status !== undefined) mapped.status = data.status
+    if (data.repeat !== undefined) mapped.repeat = data.repeat
+    if (data.last_submitted_date !== undefined) mapped.last_submitted_date = data.last_submitted_date
     await supabase.from('tasks').update(mapped).eq('id', id)
   },
   deleteTask: async (id) => {
     await supabase.from('tasks').delete().eq('id', id)
   },
   markTaskDone: async (id) => {
-    await supabase.from('tasks').update({ status: 'done' }).eq('id', id)
+    const task = get().tasks.find((t) => t.id === id)
+    if (!task) return
+    const updates = { status: 'done' }
+    if (task.repeat === 'daily') updates.last_submitted_date = today()
+    await supabase.from('tasks').update(updates).eq('id', id)
   },
   approveTask: async (id) => {
     const task = get().tasks.find((t) => t.id === id)
     if (!task) return
     const child = get().children.find((c) => c.id === task.assignedTo)
     if (!child) return
-    await supabase.from('tasks').update({ status: 'approved' }).eq('id', id)
+    const newStatus = task.repeat === 'daily' ? 'pending' : 'approved'
+    await supabase.from('tasks').update({ status: newStatus }).eq('id', id)
     await supabase.from('children').update({ points: (child.points || 0) + task.points }).eq('id', child.id)
   },
   rejectTask: async (id) => {
-    await supabase.from('tasks').update({ status: 'rejected' }).eq('id', id)
+    const task = get().tasks.find((t) => t.id === id)
+    if (!task) return
+    const newStatus = task.repeat === 'daily' ? 'pending' : 'rejected'
+    await supabase.from('tasks').update({ status: newStatus }).eq('id', id)
+  },
+  checkDailyTasks: async () => {
+    const tasks = get().tasks
+    const t = today()
+    const expired = tasks.filter(
+      (task) => task.repeat === 'daily' && task.status === 'done' && task.last_submitted_date !== t
+    )
+    for (const task of expired) {
+      await supabase.from('tasks').update({ status: 'pending', last_submitted_date: null }).eq('id', task.id)
+    }
   },
 
   // Rewards

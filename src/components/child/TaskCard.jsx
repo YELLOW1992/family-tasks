@@ -11,12 +11,16 @@ export default function TaskCard({ task, childId }) {
   }
 
   const cfg = statusConfig[task.status]
+  const isDaily = task.repeat === 'daily'
 
   return (
-    <div className="bg-white rounded-3xl shadow p-5">
+    <div className={`bg-white rounded-3xl shadow p-5 ${isDaily ? 'border-l-4 border-orange-400' : ''}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1">
-          <p className="text-xl font-bold text-gray-800">{task.title}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-xl font-bold text-gray-800">{task.title}</p>
+            {isDaily && <span className="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full font-semibold">🔁 每日</span>}
+          </div>
           {task.description && <p className="text-gray-500 mt-1">{task.description}</p>}
           <div className="flex flex-wrap gap-2 mt-3">
             <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-semibold">⭐ {task.points} 积分</span>
@@ -33,7 +37,7 @@ export default function TaskCard({ task, childId }) {
           标记完成 ✓
         </button>
       )}
-      {task.status === 'rejected' && (
+      {task.status === 'rejected' && !isDaily && (
         <button
           onClick={() => markTaskDone(task.id)}
           className="mt-4 w-full py-4 rounded-2xl bg-yellow-500 text-white text-lg font-bold active:bg-yellow-600 transition-colors"

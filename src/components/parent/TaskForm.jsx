@@ -9,6 +9,7 @@ export default function TaskForm({ task, onClose }) {
     points: task?.points || 10,
     assignedTo: task?.assignedTo || (children[0]?.id || ''),
     dueDate: task?.dueDate || '',
+    repeat: task?.repeat || 'none',
   })
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }))
@@ -63,15 +64,38 @@ export default function TaskForm({ task, onClose }) {
           ))}
         </select>
 
-        <label className="block text-gray-600 font-semibold mb-1">截止日期（可选）</label>
-        <input
-          type="date"
-          className="w-full border-2 border-gray-200 rounded-2xl px-5 py-4 text-xl mb-8 focus:border-indigo-400 outline-none"
-          value={form.dueDate}
-          onChange={(e) => set('dueDate', e.target.value)}
-        />
+        <label className="block text-gray-600 font-semibold mb-2">任务类型</label>
+        <div className="flex gap-3 mb-4">
+          <button
+            onClick={() => set('repeat', 'none')}
+            className={`flex-1 py-3 rounded-2xl font-semibold text-lg transition-all ${form.repeat === 'none' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600'}`}
+          >
+            普通任务
+          </button>
+          <button
+            onClick={() => set('repeat', 'daily')}
+            className={`flex-1 py-3 rounded-2xl font-semibold text-lg transition-all ${form.repeat === 'daily' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-600'}`}
+          >
+            🔁 每日任务
+          </button>
+        </div>
+        {form.repeat === 'daily' && (
+          <p className="text-sm text-orange-600 bg-orange-50 rounded-xl px-4 py-3 mb-4">每天可提交一次，审批通过后自动重置；当天未提交则失效等待次日</p>
+        )}
 
-        <div className="flex gap-4">
+        {form.repeat === 'none' && (
+          <>
+            <label className="block text-gray-600 font-semibold mb-1">截止日期（可选）</label>
+            <input
+              type="date"
+              className="w-full border-2 border-gray-200 rounded-2xl px-5 py-4 text-xl mb-8 focus:border-indigo-400 outline-none"
+              value={form.dueDate}
+              onChange={(e) => set('dueDate', e.target.value)}
+            />
+          </>
+        )}
+
+        <div className="flex gap-4 mt-4">
           <button onClick={onClose} className="flex-1 py-4 rounded-2xl bg-gray-100 text-gray-700 text-lg font-semibold">取消</button>
           <button onClick={handleSave} className="flex-1 py-4 rounded-2xl bg-indigo-600 text-white text-lg font-semibold active:bg-indigo-700">保存</button>
         </div>
