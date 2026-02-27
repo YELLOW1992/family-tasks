@@ -44,21 +44,18 @@ export default function TaskCard({ task, childId }) {
   }
 
   return (
-    <div className={`bg-white rounded-3xl shadow p-5 ${isDaily ? 'border-l-4 border-orange-400' : ''}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-xl font-bold text-gray-800">{task.title}</p>
-            {isDaily && <span className="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full font-semibold">🔁 每日</span>}
-            {task.requirePhoto && <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full font-semibold">📷 需拍照</span>}
-          </div>
-          {task.description && <p className="text-gray-500 mt-1">{task.description}</p>}
-          <div className="flex flex-wrap gap-2 mt-3">
-            <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-semibold">⭐ {task.points} 积分</span>
-            {task.dueDate && <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-semibold">📅 {task.dueDate}</span>}
-            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${cfg.color}`}>{cfg.label}</span>
-          </div>
-        </div>
+    <div className={`bg-white rounded-3xl shadow p-4 flex flex-col gap-2 ${isDaily ? 'border-t-4 border-orange-400' : ''}`}>
+      <div className="flex items-center gap-1 flex-wrap">
+        {isDaily && <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-semibold">🔁</span>}
+        {task.requirePhoto && <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-semibold">📷</span>}
+      </div>
+      <p className="text-base font-bold text-gray-800 leading-tight">{task.title}</p>
+      {task.description && <p className="text-gray-400 text-xs leading-tight line-clamp-2">{task.description}</p>}
+      <div className="flex flex-wrap gap-1 mt-1">
+        <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${task.points >= 0 ? 'bg-indigo-100 text-indigo-700' : 'bg-red-100 text-red-600'}`}>
+          {task.points >= 0 ? `⭐ +${task.points}` : `⭐ ${task.points}`}
+        </span>
+        <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${cfg.color}`}>{cfg.label}</span>
       </div>
 
       {task.status === 'pending' && (
@@ -81,9 +78,9 @@ export default function TaskCard({ task, childId }) {
           <button
             onClick={handleSubmit}
             disabled={task.requirePhoto && !photo}
-            className="w-full py-4 rounded-2xl bg-green-500 text-white text-lg font-bold active:bg-green-600 disabled:opacity-40 transition-colors"
+            className="w-full py-2 rounded-2xl bg-green-500 text-white text-sm font-bold active:bg-green-600 disabled:opacity-40 transition-colors"
           >
-            标记完成 ✓
+            完成 ✓
           </button>
         </div>
       )}
@@ -91,7 +88,7 @@ export default function TaskCard({ task, childId }) {
       {task.status === 'rejected' && !isDaily && (
         <button
           onClick={() => markTaskDone(task.id)}
-          className="mt-4 w-full py-4 rounded-2xl bg-yellow-500 text-white text-lg font-bold active:bg-yellow-600 transition-colors"
+          className="mt-2 w-full py-2 rounded-2xl bg-yellow-500 text-white text-sm font-bold active:bg-yellow-600 transition-colors"
         >
           重新提交 ↺
         </button>

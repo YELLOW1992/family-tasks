@@ -15,7 +15,7 @@ export default function TaskList({ childId }) {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="grid grid-cols-2 gap-4">
       {tasks.map((t) => (
         <TaskCard key={t.id} task={t} childId={childId} />
       ))}
