@@ -33,7 +33,7 @@ export default function TaskForm({ task, onClose }) {
       else await addTask(form)
       onClose()
     } catch (e) {
-      setError('保存失败，请重试')
+      setError('保存失败：' + (e.message || '请重试'))
       setSaving(false)
     }
   }

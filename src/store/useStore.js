@@ -72,7 +72,7 @@ const useStore = create((set, get) => ({
   },
 
   addTask: async (task) => {
-    await supabase.from('tasks').insert({
+    const { error } = await supabase.from('tasks').insert({
       title: task.title,
       description: task.description,
       points: task.points,
@@ -84,6 +84,7 @@ const useStore = create((set, get) => ({
       require_photo: task.requirePhoto || false,
       photo: null,
     })
+    if (error) throw new Error(error.message)
     set({ tasks: await fetchTasks() })
   },
   updateTask: async (id, data) => {
