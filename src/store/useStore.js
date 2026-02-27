@@ -159,6 +159,14 @@ const useStore = create((set, get) => ({
     set({ rewards: await fetchRewards() })
   },
 
+  deductPoints: async (childId, amount) => {
+    const child = get().children.find((c) => c.id === childId)
+    if (!child) return
+    const newPoints = Math.max(0, (child.points || 0) - amount)
+    await supabase.from('children').update({ points: newPoints }).eq('id', childId)
+    set({ children: await fetchChildren() })
+  },
+
   redeemReward: async (rewardId, childId) => {
     const reward = get().rewards.find((r) => r.id === rewardId)
     const child = get().children.find((c) => c.id === childId)
