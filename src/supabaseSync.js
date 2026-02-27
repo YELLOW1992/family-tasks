@@ -25,12 +25,13 @@ function mapRedemption(r) {
 
 async function loadAll() {
   const set = useStore.setState
-  const [config, children, tasks, rewards, redemptions] = await Promise.all([
+  const [config, children, tasks, rewards, redemptions, pointHistory] = await Promise.all([
     supabase.from('config').select('*'),
     supabase.from('children').select('*'),
     supabase.from('tasks').select('*'),
     supabase.from('rewards').select('*'),
     supabase.from('redemptions').select('*'),
+    supabase.from('point_history').select('*').order('created_at', { ascending: false }),
   ])
   const pin = config.data?.find((r) => r.key === 'pin')?.value ?? null
   set({
@@ -39,6 +40,7 @@ async function loadAll() {
     tasks: (tasks.data || []).map(mapTask),
     rewards: rewards.data || [],
     redemptions: (redemptions.data || []).map(mapRedemption),
+    pointHistory: pointHistory.data || [],
   })
 }
 

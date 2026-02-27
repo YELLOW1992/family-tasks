@@ -45,12 +45,18 @@ async function fetchRedemptions() {
   return (data || []).map(mapRedemption)
 }
 
+async function fetchPointHistory() {
+  const { data } = await supabase.from('point_history').select('*').order('created_at', { ascending: false })
+  return data || []
+}
+
 const useStore = create((set, get) => ({
   pin: null,
   children: [],
   tasks: [],
   rewards: [],
   redemptions: [],
+  pointHistory: [],
 
   setPin: async (pin) => {
     await supabase.from('config').upsert({ key: 'pin', value: pin })
@@ -123,7 +129,14 @@ const useStore = create((set, get) => ({
     const newPoints = Math.max(0, (child.points || 0) + task.points)
     await supabase.from('tasks').update({ status: newStatus, photo: null }).eq('id', id)
     await supabase.from('children').update({ points: newPoints }).eq('id', child.id)
-    set({ tasks: await fetchTasks(), children: await fetchChildren() })
+    await supabase.from('point_history').insert({
+      child_id: child.id,
+      date: today(),
+      points: task.points,
+      reason: task.title,
+      type: task.points >= 0 ? 'task' : 'penalty_task',
+    })
+    set({ tasks: await fetchTasks(), children: await fetchChildren(), pointHistory: await fetchPointHistory() })
   },
   rejectTask: async (id) => {
     const task = get().tasks.find((t) => t.id === id)
@@ -159,12 +172,19 @@ const useStore = create((set, get) => ({
     set({ rewards: await fetchRewards() })
   },
 
-  deductPoints: async (childId, amount) => {
+  deductPoints: async (childId, amount, reason = '') => {
     const child = get().children.find((c) => c.id === childId)
     if (!child) return
     const newPoints = Math.max(0, (child.points || 0) - amount)
     await supabase.from('children').update({ points: newPoints }).eq('id', childId)
-    set({ children: await fetchChildren() })
+    await supabase.from('point_history').insert({
+      child_id: childId,
+      date: today(),
+      points: -amount,
+      reason: reason || '家长扣分',
+      type: 'deduct',
+    })
+    set({ children: await fetchChildren(), pointHistory: await fetchPointHistory() })
   },
 
   redeemReward: async (rewardId, childId) => {

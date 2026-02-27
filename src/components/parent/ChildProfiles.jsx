@@ -27,7 +27,7 @@ export default function ChildProfiles() {
 
   const handleDeduct = async () => {
     if (!deductForm.amount || deductForm.amount < 1) return
-    await deductPoints(deducting, Number(deductForm.amount))
+    await deductPoints(deducting, Number(deductForm.amount), deductForm.reason)
     setDeducting(null)
     setDeductForm({ amount: 1, reason: '' })
   }
