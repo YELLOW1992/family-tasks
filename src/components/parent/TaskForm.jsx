@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import useStore from '../../store/useStore'
 
 export default function TaskForm({ task, onClose }) {
@@ -12,14 +12,30 @@ export default function TaskForm({ task, onClose }) {
     repeat: task?.repeat || 'none',
     requirePhoto: task?.requirePhoto || false,
   })
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (!form.assignedTo && children[0]?.id) {
+      setForm((f) => ({ ...f, assignedTo: children[0].id }))
+    }
+  }, [children])
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }))
 
-  const handleSave = () => {
-    if (!form.title.trim() || !form.assignedTo) return
-    if (task) updateTask(task.id, form)
-    else addTask(form)
-    onClose()
+  const handleSave = async () => {
+    if (!form.title.trim()) { setError('请填写任务标题'); return }
+    if (!form.assignedTo) { setError('请选择分配给哪个孩子'); return }
+    setSaving(true)
+    setError('')
+    try {
+      if (task) await updateTask(task.id, form)
+      else await addTask(form)
+      onClose()
+    } catch (e) {
+      setError('保存失败，请重试')
+      setSaving(false)
+    }
   }
 
   return (
@@ -106,8 +122,9 @@ export default function TaskForm({ task, onClose }) {
 
         <div className="flex gap-4 mt-4">
           <button onClick={onClose} className="flex-1 py-4 rounded-2xl bg-gray-100 text-gray-700 text-lg font-semibold">取消</button>
-          <button onClick={handleSave} className="flex-1 py-4 rounded-2xl bg-indigo-600 text-white text-lg font-semibold active:bg-indigo-700">保存</button>
+          <button onClick={handleSave} disabled={saving} className="flex-1 py-4 rounded-2xl bg-indigo-600 text-white text-lg font-semibold active:bg-indigo-700 disabled:opacity-60">{saving ? '保存中...' : '保存'}</button>
         </div>
+        {error && <p className="text-red-500 text-center mt-3">{error}</p>}
       </div>
     </div>
   )
