@@ -9,6 +9,8 @@ function mapTask(t) {
     createdAt: t.created_at,
     repeat: t.repeat || 'none',
     last_submitted_date: t.last_submitted_date || null,
+    requirePhoto: t.require_photo || false,
+    photo: t.photo || null,
   }
 }
 

@@ -10,6 +10,7 @@ export default function TaskForm({ task, onClose }) {
     assignedTo: task?.assignedTo || (children[0]?.id || ''),
     dueDate: task?.dueDate || '',
     repeat: task?.repeat || 'none',
+    requirePhoto: task?.requirePhoto || false,
   })
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }))
@@ -79,16 +80,24 @@ export default function TaskForm({ task, onClose }) {
             🔁 每日任务
           </button>
         </div>
+
         {form.repeat === 'daily' && (
           <p className="text-sm text-orange-600 bg-orange-50 rounded-xl px-4 py-3 mb-4">每天可提交一次，审批通过后自动重置；当天未提交则失效等待次日</p>
         )}
+
+        <button
+          onClick={() => set('requirePhoto', !form.requirePhoto)}
+          className={`w-full py-3 rounded-2xl font-semibold text-lg mb-4 transition-all flex items-center justify-center gap-2 ${form.requirePhoto ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'}`}
+        >
+          📷 {form.requirePhoto ? '需要拍照提交（已开启）' : '需要拍照提交（未开启）'}
+        </button>
 
         {form.repeat === 'none' && (
           <>
             <label className="block text-gray-600 font-semibold mb-1">截止日期（可选）</label>
             <input
               type="date"
-              className="w-full border-2 border-gray-200 rounded-2xl px-5 py-4 text-xl mb-8 focus:border-indigo-400 outline-none"
+              className="w-full border-2 border-gray-200 rounded-2xl px-5 py-4 text-xl mb-4 focus:border-indigo-400 outline-none"
               value={form.dueDate}
               onChange={(e) => set('dueDate', e.target.value)}
             />
