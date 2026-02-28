@@ -4,11 +4,14 @@ import ConfirmModal from '../common/ConfirmModal'
 import TaskForm from './TaskForm'
 
 export default function TaskManager() {
-  const { tasks, children, deleteTask, executePenalty } = useStore()
+  const { tasks, children, deleteTask, executePenalty, addChild, removeChild } = useStore()
   const [editing, setEditing] = useState(null) // null | 'new' | task obj
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [confirmPenalty, setConfirmPenalty] = useState(null)
   const [viewingTask, setViewingTask] = useState(null)
+  const [selectedChildId, setSelectedChildId] = useState(null)
+  const [addingChild, setAddingChild] = useState(false)
+  const [childForm, setChildForm] = useState({ name: '', avatar: '👦' })
 
   const getChild = (id) => children.find((c) => c.id === id)
 
@@ -26,24 +29,68 @@ export default function TaskManager() {
     rejected: '已拒绝',
   }
 
+  const filteredTasks = selectedChildId
+    ? tasks.filter(t => t.assignedTo === selectedChildId)
+    : tasks
+
+  const handleAddChild = async () => {
+    if (!childForm.name.trim()) return
+    await addChild(childForm)
+    setChildForm({ name: '', avatar: '👦' })
+    setAddingChild(false)
+  }
+
+  const avatarOptions = ['👦', '👧', '🧒', '👶', '🧑', '👨', '👩', '🐶', '🐱', '🐻', '🦁', '🐼']
+
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <h2 className="text-2xl font-bold text-gray-800">任务</h2>
         <button onClick={() => setEditing('new')} className="bg-indigo-600 text-white px-5 py-3 rounded-2xl font-semibold text-lg active:bg-indigo-700">
-          + 添加
+          + 添加任务
         </button>
       </div>
 
-      {tasks.length === 0 && (
+      {/* 孩子头像选择器 */}
+      <div className="flex items-center gap-3 mb-6 overflow-x-auto pb-2">
+        <button
+          onClick={() => setSelectedChildId(null)}
+          className={`flex-shrink-0 w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold transition-all ${
+            selectedChildId === null ? 'bg-indigo-600 text-white ring-4 ring-indigo-200' : 'bg-gray-100 text-gray-600'
+          }`}
+        >
+          全部
+        </button>
+        {children.map((child) => (
+          <div key={child.id} className="relative flex-shrink-0">
+            <button
+              onClick={() => setSelectedChildId(child.id)}
+              className={`w-16 h-16 rounded-full flex flex-col items-center justify-center text-2xl transition-all ${
+                selectedChildId === child.id ? 'bg-purple-100 ring-4 ring-purple-300' : 'bg-gray-100'
+              }`}
+            >
+              <span>{child.avatar}</span>
+            </button>
+            <p className="text-xs text-center mt-1 text-gray-600">{child.name}</p>
+          </div>
+        ))}
+        <button
+          onClick={() => setAddingChild(true)}
+          className="flex-shrink-0 w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-3xl font-bold active:bg-green-200"
+        >
+          +
+        </button>
+      </div>
+
+      {filteredTasks.length === 0 && (
         <div className="text-center py-16 text-gray-400">
           <div className="text-6xl mb-4">📋</div>
-          <p className="text-xl">还没有任务，为孩子创建一个吧</p>
+          <p className="text-xl">{selectedChildId ? '这个孩子还没有任务' : '还没有任务，为孩子创建一个吧'}</p>
         </div>
       )}
 
       <div className="grid grid-cols-2 gap-4">
-        {tasks.map((t) => {
+        {filteredTasks.map((t) => {
           const child = getChild(t.assignedTo)
           return (
             <div
@@ -153,6 +200,47 @@ export default function TaskManager() {
                 className="w-full py-3 rounded-2xl bg-red-100 text-red-600 font-semibold text-lg active:bg-red-200"
               >
                 {viewingTask.isPenalty ? '取消' : '删除'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {addingChild && (
+        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50" onClick={() => setAddingChild(false)}>
+          <div className="bg-white rounded-t-3xl p-6 w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-2xl font-bold mb-4">添加孩子</h3>
+
+            <label className="block text-gray-600 font-semibold mb-2">选择头像</label>
+            <div className="grid grid-cols-6 gap-3 mb-4">
+              {avatarOptions.map((emoji) => (
+                <button
+                  key={emoji}
+                  onClick={() => setChildForm(f => ({ ...f, avatar: emoji }))}
+                  className={`w-full aspect-square rounded-2xl text-3xl flex items-center justify-center transition-all ${
+                    childForm.avatar === emoji ? 'bg-purple-200 ring-4 ring-purple-300' : 'bg-gray-100'
+                  }`}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+
+            <label className="block text-gray-600 font-semibold mb-2">孩子名字</label>
+            <input
+              type="text"
+              className="w-full border-2 border-gray-200 rounded-2xl px-5 py-4 text-xl mb-4 focus:border-indigo-400 outline-none"
+              placeholder="输入名字"
+              value={childForm.name}
+              onChange={(e) => setChildForm(f => ({ ...f, name: e.target.value }))}
+            />
+
+            <div className="flex gap-3">
+              <button onClick={() => setAddingChild(false)} className="flex-1 py-3 rounded-2xl bg-gray-100 text-gray-700 font-semibold text-lg">
+                取消
+              </button>
+              <button onClick={handleAddChild} className="flex-1 py-3 rounded-2xl bg-indigo-600 text-white font-semibold text-lg active:bg-indigo-700">
+                添加
               </button>
             </div>
           </div>
