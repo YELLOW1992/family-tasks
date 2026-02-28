@@ -60,13 +60,29 @@ export default function TaskForm({ task, onClose }) {
           onChange={(e) => set('description', e.target.value)}
         />
 
-        <label className="block text-gray-600 font-semibold mb-1">积分（负数表示惩罚任务）</label>
-        <input
-          type="number"
-          className="w-full border-2 border-gray-200 rounded-2xl px-5 py-4 text-xl mb-4 focus:border-indigo-400 outline-none"
-          value={form.points}
-          onChange={(e) => set('points', Number(e.target.value))}
-        />
+        <label className="block text-gray-600 font-semibold mb-1">积分</label>
+        <div className="flex gap-2 mb-4">
+          <button
+            type="button"
+            onClick={() => set('points', -Math.abs(form.points || 10))}
+            className={`px-4 py-3 rounded-2xl font-semibold text-sm transition-all ${form.points < 0 ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-500'}`}
+          >扣分惩罚</button>
+          <button
+            type="button"
+            onClick={() => set('points', Math.abs(form.points || 10))}
+            className={`px-4 py-3 rounded-2xl font-semibold text-sm transition-all ${form.points >= 0 ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-500'}`}
+          >奖励积分</button>
+          <input
+            type="number"
+            min={1}
+            className="flex-1 border-2 border-gray-200 rounded-2xl px-4 py-3 text-xl focus:border-indigo-400 outline-none"
+            value={Math.abs(form.points)}
+            onChange={(e) => {
+              const abs = Math.max(1, Number(e.target.value) || 1)
+              set('points', form.points < 0 ? -abs : abs)
+            }}
+          />
+        </div>
 
         <label className="block text-gray-600 font-semibold mb-1">分配给</label>
         <select
