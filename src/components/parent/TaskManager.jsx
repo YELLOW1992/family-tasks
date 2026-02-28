@@ -49,17 +49,18 @@ export default function TaskManager() {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <p className="text-xl font-bold text-gray-800">{t.title}</p>
-                    {t.isPenalty && <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full font-semibold">⚠️ 惩罚任务</span>}
+                    {t.isPenalty && <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full font-semibold">⚠️ 扣分任务</span>}
                     {t.repeat === 'daily' && <span className="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full font-semibold">🔁 每日</span>}
                   </div>
                   {t.description && <p className="text-gray-500 mt-1">{t.description}</p>}
                   <div className="flex flex-wrap gap-2 mt-3">
                     <span className={`px-3 py-1 rounded-full text-sm font-semibold ${t.isPenalty ? 'bg-red-100 text-red-600' : 'bg-indigo-100 text-indigo-700'}`}>
-                      {t.isPenalty ? `⚠️ -${t.points} 分` : `⭐ ${t.points} 积分`}
+                      {t.isPenalty ? `⚠️ 每次 -${t.points} 分` : `⭐ ${t.points} 积分`}
                     </span>
                     {child && <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-semibold">{child.avatar} {child.name}</span>}
                     {!t.isPenalty && <span className={`px-3 py-1 rounded-full text-sm font-semibold ${statusColor[t.status]}`}>{statusLabel[t.status]}</span>}
-                    {t.dueDate && <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-semibold">📅 {t.dueDate}</span>}
+                    {t.dueDate && !t.isPenalty && <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-semibold">📅 {t.dueDate}</span>}
+                    {t.isPenalty && <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm font-semibold">可重复执行</span>}
                   </div>
                 </div>
                 <div className="flex flex-col gap-2">
@@ -67,7 +68,7 @@ export default function TaskManager() {
                     <button onClick={() => executePenalty(t.id)} className="px-4 py-2 rounded-xl bg-red-500 text-white font-semibold active:bg-red-600">执行扣分</button>
                   )}
                   <button onClick={() => setEditing(t)} className="px-4 py-2 rounded-xl bg-indigo-100 text-indigo-700 font-semibold active:bg-indigo-200">编辑</button>
-                  <button onClick={() => setConfirmDelete(t.id)} className="px-4 py-2 rounded-xl bg-red-100 text-red-600 font-semibold active:bg-red-200">删除</button>
+                  <button onClick={() => setConfirmDelete(t.id)} className="px-4 py-2 rounded-xl bg-red-100 text-red-600 font-semibold active:bg-red-200">{t.isPenalty ? '取消' : '删除'}</button>
                 </div>
               </div>
             </div>
@@ -84,7 +85,7 @@ export default function TaskManager() {
 
       {confirmDelete && (
         <ConfirmModal
-          message="确定删除这个任务？"
+          message={tasks.find(t => t.id === confirmDelete)?.isPenalty ? "确定取消这个扣分任务？" : "确定删除这个任务？"}
           onConfirm={() => { deleteTask(confirmDelete); setConfirmDelete(null) }}
           onCancel={() => setConfirmDelete(null)}
         />

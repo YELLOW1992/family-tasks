@@ -103,7 +103,7 @@ export default function TaskForm({ task, onClose }) {
             onClick={() => { set('isPenalty', true); set('repeat', 'none') }}
             className={`flex-1 py-3 rounded-2xl font-semibold text-lg transition-all ${form.isPenalty ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600'}`}
           >
-            ⚠️ 惩罚任务
+            ⚠️ 扣分任务
           </button>
         </div>
 
@@ -112,7 +112,7 @@ export default function TaskForm({ task, onClose }) {
         )}
 
         {form.isPenalty && (
-          <p className="text-sm text-red-600 bg-red-50 rounded-xl px-4 py-3 mb-4">惩罚任务孩子只能查看，家长手动触发扣分</p>
+          <p className="text-sm text-red-600 bg-red-50 rounded-xl px-4 py-3 mb-4">扣分任务在孩子界面长期显示作为警告，孩子只能查看无法操作。家长可以多次执行扣分，直到取消任务才会消失。</p>
         )}
 
         {!form.isPenalty && (
