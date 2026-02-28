@@ -11,6 +11,7 @@ export default function TaskManager() {
   const [viewingTask, setViewingTask] = useState(null)
   const [addingChild, setAddingChild] = useState(false)
   const [confirmRemoveChild, setConfirmRemoveChild] = useState(null)
+  const [childForm, setChildForm] = useState({ name: '', avatar: '👦' })
 
   const getChild = (id) => children.find((c) => c.id === id)
 
@@ -197,7 +198,7 @@ export default function TaskManager() {
         <ConfirmModal
           message={`确定删除 ${confirmRemoveChild.avatar} ${confirmRemoveChild.name}？`}
           confirmLabel="删除"
-          onConfirm={() => { removeChild(confirmRemoveChild.id); setConfirmRemoveChild(null); setSelectedChildId(null) }}
+          onConfirm={() => { removeChild(confirmRemoveChild.id); setConfirmRemoveChild(null) }}
           onCancel={() => setConfirmRemoveChild(null)}
         />
       )}
