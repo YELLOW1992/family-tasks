@@ -11,7 +11,7 @@ export default function TaskManager() {
   const [viewingTask, setViewingTask] = useState(null)
   const [selectedChildId, setSelectedChildId] = useState(null)
   const [addingChild, setAddingChild] = useState(false)
-  const [childForm, setChildForm] = useState({ name: '', avatar: '👦' })
+  const [confirmRemoveChild, setConfirmRemoveChild] = useState(null)
 
   const getChild = (id) => children.find((c) => c.id === id)
 
@@ -53,33 +53,44 @@ export default function TaskManager() {
 
       {/* 孩子头像选择器 */}
       <div className="flex items-center gap-3 mb-6 overflow-x-auto pb-2">
-        <button
-          onClick={() => setSelectedChildId(null)}
-          className={`flex-shrink-0 w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold transition-all ${
-            selectedChildId === null ? 'bg-indigo-600 text-white ring-4 ring-indigo-200' : 'bg-gray-100 text-gray-600'
-          }`}
-        >
-          全部
-        </button>
+        <div className="flex-shrink-0 flex flex-col items-center">
+          <button
+            onClick={() => setSelectedChildId(null)}
+            className={`w-14 h-14 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
+              selectedChildId === null ? 'bg-indigo-600 text-white ring-4 ring-indigo-200' : 'bg-gray-100 text-gray-600'
+            }`}
+          >
+            全部
+          </button>
+        </div>
         {children.map((child) => (
-          <div key={child.id} className="relative flex-shrink-0">
+          <div key={child.id} className="flex-shrink-0 flex flex-col items-center">
             <button
               onClick={() => setSelectedChildId(child.id)}
-              className={`w-16 h-16 rounded-full flex flex-col items-center justify-center text-2xl transition-all ${
+              onContextMenu={(e) => { e.preventDefault(); setConfirmRemoveChild(child) }}
+              onTouchStart={(e) => {
+                const timer = setTimeout(() => setConfirmRemoveChild(child), 600)
+                e.currentTarget._timer = timer
+              }}
+              onTouchEnd={(e) => clearTimeout(e.currentTarget._timer)}
+              className={`w-14 h-14 rounded-full flex items-center justify-center text-2xl transition-all ${
                 selectedChildId === child.id ? 'bg-purple-100 ring-4 ring-purple-300' : 'bg-gray-100'
               }`}
             >
-              <span>{child.avatar}</span>
+              {child.avatar}
             </button>
-            <p className="text-xs text-center mt-1 text-gray-600">{child.name}</p>
+            <p className="text-xs text-center mt-1 text-gray-600 w-14 truncate">{child.name}</p>
           </div>
         ))}
-        <button
-          onClick={() => setAddingChild(true)}
-          className="flex-shrink-0 w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-3xl font-bold active:bg-green-200"
-        >
-          +
-        </button>
+        <div className="flex-shrink-0 flex flex-col items-center">
+          <button
+            onClick={() => setAddingChild(true)}
+            className="w-14 h-14 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-3xl font-bold active:bg-green-200"
+          >
+            +
+          </button>
+          <p className="text-xs text-center mt-1 text-gray-400">添加</p>
+        </div>
       </div>
 
       {filteredTasks.length === 0 && (
@@ -129,6 +140,7 @@ export default function TaskManager() {
       {confirmDelete && (
         <ConfirmModal
           message={tasks.find(t => t.id === confirmDelete)?.isPenalty ? "确定取消这个扣分任务？" : "确定删除这个任务？"}
+          confirmLabel={tasks.find(t => t.id === confirmDelete)?.isPenalty ? '取消任务' : '删除'}
           onConfirm={() => { deleteTask(confirmDelete); setConfirmDelete(null) }}
           onCancel={() => setConfirmDelete(null)}
         />
@@ -137,6 +149,7 @@ export default function TaskManager() {
       {confirmPenalty && (
         <ConfirmModal
           message={`确定执行扣分吗？将扣除 ${tasks.find(t => t.id === confirmPenalty)?.points} 分`}
+          confirmLabel="执行扣分"
           onConfirm={() => { executePenalty(confirmPenalty); setConfirmPenalty(null) }}
           onCancel={() => setConfirmPenalty(null)}
         />
@@ -204,6 +217,15 @@ export default function TaskManager() {
             </div>
           </div>
         </div>
+      )}
+
+      {confirmRemoveChild && (
+        <ConfirmModal
+          message={`确定删除 ${confirmRemoveChild.avatar} ${confirmRemoveChild.name}？`}
+          confirmLabel="删除"
+          onConfirm={() => { removeChild(confirmRemoveChild.id); setConfirmRemoveChild(null); setSelectedChildId(null) }}
+          onCancel={() => setConfirmRemoveChild(null)}
+        />
       )}
 
       {addingChild && (
