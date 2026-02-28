@@ -4,7 +4,7 @@ import ConfirmModal from '../common/ConfirmModal'
 import TaskForm from './TaskForm'
 
 export default function TaskManager() {
-  const { tasks, children, deleteTask } = useStore()
+  const { tasks, children, deleteTask, executePenalty } = useStore()
   const [editing, setEditing] = useState(null) // null | 'new' | task obj
   const [confirmDelete, setConfirmDelete] = useState(null)
 
@@ -47,16 +47,25 @@ export default function TaskManager() {
             <div key={t.id} className="bg-white rounded-3xl shadow p-5">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
-                  <p className="text-xl font-bold text-gray-800">{t.title}</p>
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="text-xl font-bold text-gray-800">{t.title}</p>
+                    {t.isPenalty && <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full font-semibold">⚠️ 惩罚任务</span>}
+                    {t.repeat === 'daily' && <span className="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full font-semibold">🔁 每日</span>}
+                  </div>
                   {t.description && <p className="text-gray-500 mt-1">{t.description}</p>}
                   <div className="flex flex-wrap gap-2 mt-3">
-                    <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-semibold">⭐ {t.points} 积分</span>
+                    <span className={`px-3 py-1 rounded-full text-sm font-semibold ${t.isPenalty ? 'bg-red-100 text-red-600' : 'bg-indigo-100 text-indigo-700'}`}>
+                      {t.isPenalty ? `⚠️ -${t.points} 分` : `⭐ ${t.points} 积分`}
+                    </span>
                     {child && <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-semibold">{child.avatar} {child.name}</span>}
-                    <span className={`px-3 py-1 rounded-full text-sm font-semibold ${statusColor[t.status]}`}>{statusLabel[t.status]}</span>
+                    {!t.isPenalty && <span className={`px-3 py-1 rounded-full text-sm font-semibold ${statusColor[t.status]}`}>{statusLabel[t.status]}</span>}
                     {t.dueDate && <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-semibold">📅 {t.dueDate}</span>}
                   </div>
                 </div>
                 <div className="flex flex-col gap-2">
+                  {t.isPenalty && (
+                    <button onClick={() => executePenalty(t.id)} className="px-4 py-2 rounded-xl bg-red-500 text-white font-semibold active:bg-red-600">执行扣分</button>
+                  )}
                   <button onClick={() => setEditing(t)} className="px-4 py-2 rounded-xl bg-indigo-100 text-indigo-700 font-semibold active:bg-indigo-200">编辑</button>
                   <button onClick={() => setConfirmDelete(t.id)} className="px-4 py-2 rounded-xl bg-red-100 text-red-600 font-semibold active:bg-red-200">删除</button>
                 </div>

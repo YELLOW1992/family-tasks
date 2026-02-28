@@ -11,6 +11,7 @@ function mapTask(t) {
     last_submitted_date: t.last_submitted_date || null,
     requirePhoto: t.require_photo || false,
     photo: t.photo || null,
+    isPenalty: t.is_penalty || false,
   }
 }
 

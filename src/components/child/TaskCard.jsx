@@ -16,6 +16,7 @@ export default function TaskCard({ task, childId }) {
 
   const cfg = statusConfig[task.status]
   const isDaily = task.repeat === 'daily'
+  const isPenalty = task.isPenalty
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0]
@@ -44,21 +45,23 @@ export default function TaskCard({ task, childId }) {
   }
 
   return (
-    <div className={`bg-white rounded-3xl shadow p-4 flex flex-col gap-2 ${isDaily ? 'border-t-4 border-orange-400' : ''}`}>
+    <div className={`bg-white rounded-3xl shadow p-4 flex flex-col gap-2 ${isDaily ? 'border-t-4 border-orange-400' : isPenalty ? 'border-t-4 border-red-400' : ''}`}>
       <div className="flex items-center gap-1 flex-wrap">
         {isDaily && <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-semibold">🔁</span>}
-        {task.requirePhoto && <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-semibold">📷</span>}
+        {isPenalty && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-semibold">⚠️ 惩罚</span>}
+        {task.requirePhoto && !isPenalty && <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-semibold">📷</span>}
       </div>
       <p className="text-base font-bold text-gray-800 leading-tight">{task.title}</p>
       {task.description && <p className="text-gray-400 text-xs leading-tight line-clamp-2">{task.description}</p>}
       <div className="flex flex-wrap gap-1 mt-1">
-        <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-indigo-100 text-indigo-700">
-          ⭐ +{task.points}
+        <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${isPenalty ? 'bg-red-100 text-red-600' : 'bg-indigo-100 text-indigo-700'}`}>
+          {isPenalty ? `⚠️ -${task.points}` : `⭐ +${task.points}`}
         </span>
-        <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${cfg.color}`}>{cfg.label}</span>
+        {!isPenalty && <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${cfg.color}`}>{cfg.label}</span>}
+        {isPenalty && <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-gray-100 text-gray-600">家长操作</span>}
       </div>
 
-      {task.status === 'pending' && (
+      {task.status === 'pending' && !isPenalty && (
         <div className="mt-4">
           {task.requirePhoto && (
             <div className="mb-3">

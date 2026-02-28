@@ -11,6 +11,7 @@ export default function TaskForm({ task, onClose }) {
     dueDate: task?.dueDate || '',
     repeat: task?.repeat || 'none',
     requirePhoto: task?.requirePhoto || false,
+    isPenalty: task?.isPenalty || false,
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -84,16 +85,25 @@ export default function TaskForm({ task, onClose }) {
         <label className="block text-gray-600 font-semibold mb-2">任务类型</label>
         <div className="flex gap-3 mb-4">
           <button
-            onClick={() => set('repeat', 'none')}
-            className={`flex-1 py-3 rounded-2xl font-semibold text-lg transition-all ${form.repeat === 'none' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600'}`}
+            type="button"
+            onClick={() => { set('repeat', 'none'); set('isPenalty', false) }}
+            className={`flex-1 py-3 rounded-2xl font-semibold text-lg transition-all ${form.repeat === 'none' && !form.isPenalty ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600'}`}
           >
             普通任务
           </button>
           <button
-            onClick={() => set('repeat', 'daily')}
+            type="button"
+            onClick={() => { set('repeat', 'daily'); set('isPenalty', false) }}
             className={`flex-1 py-3 rounded-2xl font-semibold text-lg transition-all ${form.repeat === 'daily' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-600'}`}
           >
             🔁 每日任务
+          </button>
+          <button
+            type="button"
+            onClick={() => { set('isPenalty', true); set('repeat', 'none') }}
+            className={`flex-1 py-3 rounded-2xl font-semibold text-lg transition-all ${form.isPenalty ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600'}`}
+          >
+            ⚠️ 惩罚任务
           </button>
         </div>
 
@@ -101,14 +111,21 @@ export default function TaskForm({ task, onClose }) {
           <p className="text-sm text-orange-600 bg-orange-50 rounded-xl px-4 py-3 mb-4">每天可提交一次，审批通过后自动重置；当天未提交则失效等待次日</p>
         )}
 
-        <button
-          onClick={() => set('requirePhoto', !form.requirePhoto)}
-          className={`w-full py-3 rounded-2xl font-semibold text-lg mb-4 transition-all flex items-center justify-center gap-2 ${form.requirePhoto ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'}`}
-        >
-          📷 {form.requirePhoto ? '需要拍照提交（已开启）' : '需要拍照提交（未开启）'}
-        </button>
+        {form.isPenalty && (
+          <p className="text-sm text-red-600 bg-red-50 rounded-xl px-4 py-3 mb-4">惩罚任务孩子只能查看，家长手动触发扣分</p>
+        )}
 
-        {form.repeat === 'none' && (
+        {!form.isPenalty && (
+          <button
+            type="button"
+            onClick={() => set('requirePhoto', !form.requirePhoto)}
+            className={`w-full py-3 rounded-2xl font-semibold text-lg mb-4 transition-all flex items-center justify-center gap-2 ${form.requirePhoto ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'}`}
+          >
+            📷 {form.requirePhoto ? '需要拍照提交（已开启）' : '需要拍照提交（未开启）'}
+          </button>
+        )}
+
+        {form.repeat === 'none' && !form.isPenalty && (
           <>
             <label className="block text-gray-600 font-semibold mb-1">截止日期（可选）</label>
             <input

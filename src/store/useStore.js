@@ -13,6 +13,7 @@ function mapTask(t) {
     last_submitted_date: t.last_submitted_date || null,
     requirePhoto: t.require_photo || false,
     photo: t.photo || null,
+    isPenalty: t.is_penalty || false,
   }
 }
 
@@ -89,6 +90,7 @@ const useStore = create((set, get) => ({
       last_submitted_date: null,
       require_photo: task.requirePhoto || false,
       photo: null,
+      is_penalty: task.isPenalty || false,
     })
     if (error) throw new Error(error.message)
     set({ tasks: await fetchTasks() })
@@ -105,6 +107,7 @@ const useStore = create((set, get) => ({
     if (data.last_submitted_date !== undefined) mapped.last_submitted_date = data.last_submitted_date
     if (data.requirePhoto !== undefined) mapped.require_photo = data.requirePhoto
     if (data.photo !== undefined) mapped.photo = data.photo
+    if (data.isPenalty !== undefined) mapped.is_penalty = data.isPenalty
     await supabase.from('tasks').update(mapped).eq('id', id)
     set({ tasks: await fetchTasks() })
   },
@@ -183,6 +186,23 @@ const useStore = create((set, get) => ({
       points: -amount,
       reason: reason || '家长扣分',
       type: 'deduct',
+    })
+    set({ children: await fetchChildren(), pointHistory: await fetchPointHistory() })
+  },
+
+  executePenalty: async (taskId) => {
+    const task = get().tasks.find((t) => t.id === taskId)
+    if (!task || !task.isPenalty) return
+    const child = get().children.find((c) => c.id === task.assignedTo)
+    if (!child) return
+    const newPoints = Math.max(0, (child.points || 0) - task.points)
+    await supabase.from('children').update({ points: newPoints }).eq('id', child.id)
+    await supabase.from('point_history').insert({
+      child_id: child.id,
+      date: today(),
+      points: -task.points,
+      reason: task.title,
+      type: 'penalty',
     })
     set({ children: await fetchChildren(), pointHistory: await fetchPointHistory() })
   },
