@@ -8,6 +8,7 @@ export default function TaskManager() {
   const [editing, setEditing] = useState(null) // null | 'new' | task obj
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [confirmPenalty, setConfirmPenalty] = useState(null)
+  const [viewingTask, setViewingTask] = useState(null)
 
   const getChild = (id) => children.find((c) => c.id === id)
 
@@ -41,36 +42,30 @@ export default function TaskManager() {
         </div>
       )}
 
-      <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-2 gap-4">
         {tasks.map((t) => {
           const child = getChild(t.assignedTo)
           return (
-            <div key={t.id} className="bg-white rounded-3xl shadow p-5">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <p className="text-xl font-bold text-gray-800">{t.title}</p>
-                    {t.isPenalty && <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full font-semibold">⚠️ 扣分任务</span>}
-                    {t.repeat === 'daily' && <span className="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full font-semibold">🔁 每日</span>}
-                  </div>
-                  {t.description && <p className="text-gray-500 mt-1">{t.description}</p>}
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    <span className={`px-3 py-1 rounded-full text-sm font-semibold ${t.isPenalty ? 'bg-red-100 text-red-600' : 'bg-indigo-100 text-indigo-700'}`}>
-                      {t.isPenalty ? `⚠️ 每次 -${t.points} 分` : `⭐ ${t.points} 积分`}
-                    </span>
-                    {child && <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-semibold">{child.avatar} {child.name}</span>}
-                    {!t.isPenalty && <span className={`px-3 py-1 rounded-full text-sm font-semibold ${statusColor[t.status]}`}>{statusLabel[t.status]}</span>}
-                    {t.dueDate && !t.isPenalty && <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-semibold">📅 {t.dueDate}</span>}
-                    {t.isPenalty && <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm font-semibold">可重复执行</span>}
-                  </div>
+            <div
+              key={t.id}
+              onClick={() => setViewingTask(t)}
+              className={`bg-white rounded-3xl shadow p-4 flex flex-col justify-between cursor-pointer active:scale-95 transition-transform aspect-square ${
+                t.isPenalty ? 'border-2 border-red-300' : t.repeat === 'daily' ? 'border-2 border-orange-300' : ''
+              }`}
+            >
+              <div>
+                <div className="flex items-center gap-1 mb-2 flex-wrap">
+                  {t.isPenalty && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-semibold">⚠️</span>}
+                  {t.repeat === 'daily' && <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-semibold">🔁</span>}
+                  {t.requirePhoto && !t.isPenalty && <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-semibold">📷</span>}
                 </div>
-                <div className="flex flex-col gap-2">
-                  {t.isPenalty && (
-                    <button onClick={() => setConfirmPenalty(t.id)} className="px-4 py-2 rounded-xl bg-red-500 text-white font-semibold active:bg-red-600">执行扣分</button>
-                  )}
-                  <button onClick={() => setEditing(t)} className="px-4 py-2 rounded-xl bg-indigo-100 text-indigo-700 font-semibold active:bg-indigo-200">编辑</button>
-                  <button onClick={() => setConfirmDelete(t.id)} className="px-4 py-2 rounded-xl bg-red-100 text-red-600 font-semibold active:bg-red-200">{t.isPenalty ? '取消' : '删除'}</button>
-                </div>
+                <p className="text-lg font-bold text-gray-800 line-clamp-3 mb-2">{t.title}</p>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className={`text-xs px-2 py-1 rounded-full font-semibold self-start ${t.isPenalty ? 'bg-red-100 text-red-600' : 'bg-indigo-100 text-indigo-700'}`}>
+                  {t.isPenalty ? `-${t.points}` : `+${t.points}`}
+                </span>
+                {child && <span className="text-xs text-gray-500">{child.avatar} {child.name}</span>}
               </div>
             </div>
           )
@@ -98,6 +93,70 @@ export default function TaskManager() {
           onConfirm={() => { executePenalty(confirmPenalty); setConfirmPenalty(null) }}
           onCancel={() => setConfirmPenalty(null)}
         />
+      )}
+
+      {viewingTask && (
+        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50" onClick={() => setViewingTask(null)}>
+          <div className="bg-white rounded-t-3xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  {viewingTask.isPenalty && <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full font-semibold">⚠️ 扣分任务</span>}
+                  {viewingTask.repeat === 'daily' && <span className="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full font-semibold">🔁 每日</span>}
+                  {viewingTask.requirePhoto && !viewingTask.isPenalty && <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full font-semibold">📷 需要拍照</span>}
+                </div>
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">{viewingTask.title}</h3>
+                {viewingTask.description && <p className="text-gray-600 mb-3">{viewingTask.description}</p>}
+              </div>
+              <button onClick={() => setViewingTask(null)} className="text-gray-400 text-2xl ml-2">✕</button>
+            </div>
+
+            <div className="flex flex-wrap gap-2 mb-6">
+              <span className={`px-3 py-1 rounded-full text-sm font-semibold ${viewingTask.isPenalty ? 'bg-red-100 text-red-600' : 'bg-indigo-100 text-indigo-700'}`}>
+                {viewingTask.isPenalty ? `⚠️ 每次 -${viewingTask.points} 分` : `⭐ ${viewingTask.points} 积分`}
+              </span>
+              {getChild(viewingTask.assignedTo) && (
+                <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-semibold">
+                  {getChild(viewingTask.assignedTo).avatar} {getChild(viewingTask.assignedTo).name}
+                </span>
+              )}
+              {!viewingTask.isPenalty && (
+                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${statusColor[viewingTask.status]}`}>
+                  {statusLabel[viewingTask.status]}
+                </span>
+              )}
+              {viewingTask.dueDate && !viewingTask.isPenalty && (
+                <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-semibold">📅 {viewingTask.dueDate}</span>
+              )}
+              {viewingTask.isPenalty && (
+                <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm font-semibold">可重复执行</span>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-3">
+              {viewingTask.isPenalty && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setConfirmPenalty(viewingTask.id); setViewingTask(null) }}
+                  className="w-full py-3 rounded-2xl bg-red-500 text-white font-semibold text-lg active:bg-red-600"
+                >
+                  执行扣分
+                </button>
+              )}
+              <button
+                onClick={(e) => { e.stopPropagation(); setEditing(viewingTask); setViewingTask(null) }}
+                className="w-full py-3 rounded-2xl bg-indigo-100 text-indigo-700 font-semibold text-lg active:bg-indigo-200"
+              >
+                编辑
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); setConfirmDelete(viewingTask.id); setViewingTask(null) }}
+                className="w-full py-3 rounded-2xl bg-red-100 text-red-600 font-semibold text-lg active:bg-red-200"
+              >
+                {viewingTask.isPenalty ? '取消' : '删除'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
