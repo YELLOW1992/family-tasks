@@ -64,10 +64,9 @@ export default function TaskForm({ task, onClose }) {
         <label className="block text-gray-600 font-semibold mb-1">积分</label>
         <input
           type="number"
-          min={1}
           className="w-full border-2 border-gray-200 rounded-2xl px-5 py-4 text-xl mb-4 focus:border-indigo-400 outline-none"
           value={form.points}
-          onChange={(e) => set('points', Math.max(1, Number(e.target.value) || 1))}
+          onChange={(e) => set('points', Number(e.target.value) || 0)}
         />
 
         <label className="block text-gray-600 font-semibold mb-1">分配给</label>
