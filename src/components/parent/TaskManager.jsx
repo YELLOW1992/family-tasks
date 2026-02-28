@@ -7,6 +7,7 @@ export default function TaskManager() {
   const { tasks, children, deleteTask, executePenalty } = useStore()
   const [editing, setEditing] = useState(null) // null | 'new' | task obj
   const [confirmDelete, setConfirmDelete] = useState(null)
+  const [confirmPenalty, setConfirmPenalty] = useState(null)
 
   const getChild = (id) => children.find((c) => c.id === id)
 
@@ -65,7 +66,7 @@ export default function TaskManager() {
                 </div>
                 <div className="flex flex-col gap-2">
                   {t.isPenalty && (
-                    <button onClick={() => executePenalty(t.id)} className="px-4 py-2 rounded-xl bg-red-500 text-white font-semibold active:bg-red-600">执行扣分</button>
+                    <button onClick={() => setConfirmPenalty(t.id)} className="px-4 py-2 rounded-xl bg-red-500 text-white font-semibold active:bg-red-600">执行扣分</button>
                   )}
                   <button onClick={() => setEditing(t)} className="px-4 py-2 rounded-xl bg-indigo-100 text-indigo-700 font-semibold active:bg-indigo-200">编辑</button>
                   <button onClick={() => setConfirmDelete(t.id)} className="px-4 py-2 rounded-xl bg-red-100 text-red-600 font-semibold active:bg-red-200">{t.isPenalty ? '取消' : '删除'}</button>
@@ -88,6 +89,14 @@ export default function TaskManager() {
           message={tasks.find(t => t.id === confirmDelete)?.isPenalty ? "确定取消这个扣分任务？" : "确定删除这个任务？"}
           onConfirm={() => { deleteTask(confirmDelete); setConfirmDelete(null) }}
           onCancel={() => setConfirmDelete(null)}
+        />
+      )}
+
+      {confirmPenalty && (
+        <ConfirmModal
+          message={`确定执行扣分吗？将扣除 ${tasks.find(t => t.id === confirmPenalty)?.points} 分`}
+          onConfirm={() => { executePenalty(confirmPenalty); setConfirmPenalty(null) }}
+          onCancel={() => setConfirmPenalty(null)}
         />
       )}
     </div>
