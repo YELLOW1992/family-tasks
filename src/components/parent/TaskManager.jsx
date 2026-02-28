@@ -9,29 +9,21 @@ export default function TaskManager() {
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [confirmPenalty, setConfirmPenalty] = useState(null)
   const [viewingTask, setViewingTask] = useState(null)
-  const [selectedChildId, setSelectedChildId] = useState(null)
   const [addingChild, setAddingChild] = useState(false)
   const [confirmRemoveChild, setConfirmRemoveChild] = useState(null)
 
   const getChild = (id) => children.find((c) => c.id === id)
 
   const statusColor = {
-    pending: 'bg-gray-100 text-gray-600',
-    done: 'bg-yellow-100 text-yellow-700',
+    pending: 'bg-yellow-100 text-yellow-700',
+    done: 'bg-blue-100 text-blue-700',
     approved: 'bg-green-100 text-green-700',
-    rejected: 'bg-red-100 text-red-600',
   }
-
   const statusLabel = {
     pending: '待完成',
-    done: '已完成',
-    approved: '已通过',
-    rejected: '已拒绝',
+    done: '待审批',
+    approved: '已完成',
   }
-
-  const filteredTasks = selectedChildId
-    ? tasks.filter(t => t.assignedTo === selectedChildId)
-    : tasks
 
   const handleAddChild = async () => {
     if (!childForm.name.trim()) return
@@ -51,84 +43,66 @@ export default function TaskManager() {
         </button>
       </div>
 
-      {/* 孩子头像选择器 */}
-      <div className="flex items-center gap-3 mb-6 overflow-x-auto pb-2">
-        <div className="flex-shrink-0 flex flex-col items-center">
-          <button
-            onClick={() => setSelectedChildId(null)}
-            className={`w-14 h-14 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-              selectedChildId === null ? 'bg-indigo-600 text-white ring-4 ring-indigo-200' : 'bg-gray-100 text-gray-600'
-            }`}
-          >
-            全部
-          </button>
-        </div>
-        {children.map((child) => (
-          <div key={child.id} className="flex-shrink-0 flex flex-col items-center">
-            <button
-              onClick={() => setSelectedChildId(child.id)}
-              onContextMenu={(e) => { e.preventDefault(); setConfirmRemoveChild(child) }}
-              onTouchStart={(e) => {
-                const timer = setTimeout(() => setConfirmRemoveChild(child), 600)
-                e.currentTarget._timer = timer
-              }}
-              onTouchEnd={(e) => clearTimeout(e.currentTarget._timer)}
-              className={`w-14 h-14 rounded-full flex items-center justify-center text-2xl transition-all ${
-                selectedChildId === child.id ? 'bg-purple-100 ring-4 ring-purple-300' : 'bg-gray-100'
-              }`}
-            >
-              {child.avatar}
-            </button>
-            <p className="text-xs text-center mt-1 text-gray-600 w-14 truncate">{child.name}</p>
-          </div>
-        ))}
-        <div className="flex-shrink-0 flex flex-col items-center">
-          <button
-            onClick={() => setAddingChild(true)}
-            className="w-14 h-14 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-3xl font-bold active:bg-green-200"
-          >
-            +
-          </button>
-          <p className="text-xs text-center mt-1 text-gray-400">添加</p>
-        </div>
-      </div>
-
-      {filteredTasks.length === 0 && (
-        <div className="text-center py-16 text-gray-400">
-          <div className="text-6xl mb-4">📋</div>
-          <p className="text-xl">{selectedChildId ? '这个孩子还没有任务' : '还没有任务，为孩子创建一个吧'}</p>
+      {/* 孩子分组任务 */}
+      {children.length === 0 && (
+        <div className="text-center py-8 text-gray-400">
+          <p className="text-lg mb-3">还没有孩子账户</p>
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-4">
-        {filteredTasks.map((t) => {
-          const child = getChild(t.assignedTo)
-          return (
-            <div
-              key={t.id}
-              onClick={() => setViewingTask(t)}
-              className={`bg-white rounded-3xl shadow p-4 flex flex-col justify-between cursor-pointer active:scale-95 transition-transform aspect-square ${
-                t.isPenalty ? 'border-2 border-red-300' : t.repeat === 'daily' ? 'border-2 border-orange-300' : ''
-              }`}
-            >
-              <div>
-                <div className="flex items-center gap-1 mb-2 flex-wrap">
-                  {t.isPenalty && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-semibold">⚠️</span>}
-                  {t.repeat === 'daily' && <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-semibold">🔁</span>}
-                  {t.requirePhoto && !t.isPenalty && <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-semibold">📷</span>}
-                </div>
-                <p className="text-lg font-bold text-gray-800 line-clamp-3 mb-2">{t.title}</p>
+      {children.map((child) => {
+        const childTasks = tasks.filter(t => t.assignedTo === child.id)
+        return (
+          <div key={child.id} className="mb-8">
+            {/* 孩子头像区块标题 */}
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-2xl">
+                {child.avatar}
               </div>
-              <div className="flex flex-col gap-1">
-                <span className={`text-xs px-2 py-1 rounded-full font-semibold self-start ${t.isPenalty ? 'bg-red-100 text-red-600' : 'bg-indigo-100 text-indigo-700'}`}>
-                  {t.isPenalty ? `-${t.points}` : `+${t.points}`}
-                </span>
-                {child && <span className="text-xs text-gray-500">{child.avatar} {child.name}</span>}
+              <div>
+                <p className="text-lg font-bold text-gray-800">{child.name}</p>
+                <p className="text-xs text-gray-400">{childTasks.length} 个任务</p>
               </div>
             </div>
-          )
-        })}
-      </div>
+
+            {childTasks.length === 0 ? (
+              <p className="text-gray-400 text-sm pl-2">还没有任务</p>
+            ) : (
+              <div className="grid grid-cols-2 gap-4">
+                {childTasks.map((t) => (
+                  <div
+                    key={t.id}
+                    onClick={() => setViewingTask(t)}
+                    className={`bg-white rounded-3xl shadow p-4 flex flex-col justify-between cursor-pointer active:scale-95 transition-transform aspect-square ${
+                      t.isPenalty ? 'border-2 border-red-300' : t.repeat === 'daily' ? 'border-2 border-orange-300' : ''
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center gap-1 mb-2 flex-wrap">
+                        {t.isPenalty && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-semibold">⚠️</span>}
+                        {t.repeat === 'daily' && <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-semibold">🔁</span>}
+                        {t.requirePhoto && !t.isPenalty && <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-semibold">📷</span>}
+                      </div>
+                      <p className="text-lg font-bold text-gray-800 line-clamp-3 mb-2">{t.title}</p>
+                    </div>
+                    <span className={`text-xs px-2 py-1 rounded-full font-semibold self-start ${t.isPenalty ? 'bg-red-100 text-red-600' : 'bg-indigo-100 text-indigo-700'}`}>
+                      {t.isPenalty ? `-${t.points}` : `+${t.points}`}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      })}
+
+      {/* 添加孩子按钮 */}
+      <button
+        onClick={() => setAddingChild(true)}
+        className="w-full py-4 rounded-2xl border-2 border-dashed border-gray-300 text-gray-400 font-semibold text-lg active:bg-gray-50 flex items-center justify-center gap-2"
+      >
+        + 添加孩子
+      </button>
 
       {editing !== null && (
         <TaskForm
