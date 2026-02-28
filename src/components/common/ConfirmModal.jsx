@@ -1,6 +1,6 @@
 export default function ConfirmModal({ message, onConfirm, onCancel, confirmLabel = '确认' }) {
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-8">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-8">
       <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-sm">
         <p className="text-xl font-semibold text-gray-800 text-center mb-8">{message}</p>
         <div className="flex gap-4">
