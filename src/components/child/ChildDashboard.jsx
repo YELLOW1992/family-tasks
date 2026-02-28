@@ -4,6 +4,7 @@ import Avatar from '../common/Avatar'
 import TaskList from './TaskList'
 import RewardShop from './RewardShop'
 import TaskCalendar from './TaskCalendar'
+import PointLedger from './PointLedger'
 import { refreshData } from '../../supabaseSync'
 
 const AVATARS = ['🧒','👦','👧','🧑','👩','👨','🧔','👴','👵','🧕','👲','🎅','🐶','🐱','🐼','🦊','🐸','🐯','🦁','🐨','🐻','🐰','🐧','🦄']
@@ -11,6 +12,7 @@ const AVATARS = ['🧒','👦','👧','🧑','👩','👨','🧔','👴','👵',
 const TABS = [
   { id: 'tasks', label: '任务', icon: '📋' },
   { id: 'rewards', label: '奖励', icon: '🎁' },
+  { id: 'ledger', label: '账本', icon: '📊' },
   { id: 'calendar', label: '日历', icon: '📅' },
 ]
 
@@ -84,6 +86,7 @@ export default function ChildDashboard({ child, onExit }) {
       <div className="flex-1 overflow-y-auto p-6 pb-24">
         {tab === 'tasks' && <TaskList childId={child.id} />}
         {tab === 'rewards' && <RewardShop childId={child.id} />}
+        {tab === 'ledger' && <PointLedger childId={child.id} />}
         {tab === 'calendar' && <TaskCalendar childId={child.id} />}
       </div>
 
