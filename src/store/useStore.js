@@ -214,7 +214,14 @@ const useStore = create((set, get) => ({
     if (!reward.available || child.points < reward.cost) return
     await supabase.from('redemptions').insert({ reward_id: rewardId, child_id: childId, status: 'pending' })
     await supabase.from('children').update({ points: child.points - reward.cost }).eq('id', childId)
-    set({ children: await fetchChildren(), redemptions: await fetchRedemptions() })
+    await supabase.from('point_history').insert({
+      child_id: childId,
+      date: today(),
+      points: -reward.cost,
+      reason: reward.name,
+      type: 'reward',
+    })
+    set({ children: await fetchChildren(), redemptions: await fetchRedemptions(), pointHistory: await fetchPointHistory() })
   },
   fulfillRedemption: async (id) => {
     await supabase.from('redemptions').update({ status: 'fulfilled' }).eq('id', id)

@@ -25,6 +25,7 @@ export default function PointLedger({ childId }) {
     task: '完成任务',
     deduct: '家长扣分',
     penalty: '惩罚任务',
+    reward: '兑换奖励',
   }
 
   const typeColor = {
