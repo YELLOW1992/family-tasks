@@ -52,8 +52,8 @@ export default function TaskCard({ task, childId }) {
       <p className="text-base font-bold text-gray-800 leading-tight">{task.title}</p>
       {task.description && <p className="text-gray-400 text-xs leading-tight line-clamp-2">{task.description}</p>}
       <div className="flex flex-wrap gap-1 mt-1">
-        <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${task.points >= 0 ? 'bg-indigo-100 text-indigo-700' : 'bg-red-100 text-red-600'}`}>
-          {task.points >= 0 ? `⭐ +${task.points}` : `⭐ ${task.points}`}
+        <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-indigo-100 text-indigo-700">
+          ⭐ +{task.points}
         </span>
         <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${cfg.color}`}>{cfg.label}</span>
       </div>
