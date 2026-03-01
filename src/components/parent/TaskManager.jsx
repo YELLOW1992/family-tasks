@@ -97,6 +97,45 @@ export default function TaskManager() {
         )
       })}
 
+      {/* 孤立任务（分配的孩子已被删除） */}
+      {(() => {
+        const childIds = new Set(children.map(c => c.id))
+        const orphaned = tasks.filter(t => !childIds.has(t.assignedTo))
+        if (orphaned.length === 0) return null
+        return (
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-2xl">❓</div>
+              <div>
+                <p className="text-lg font-bold text-gray-500">未分配任务</p>
+                <p className="text-xs text-gray-400">孩子已删除，任务仍保留</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {orphaned.map((t) => (
+                <div
+                  key={t.id}
+                  onClick={() => setViewingTask(t)}
+                  className={`bg-white rounded-3xl shadow p-4 flex flex-col justify-between cursor-pointer active:scale-95 transition-transform aspect-square ${
+                    t.isPenalty ? 'border-2 border-red-300' : ''
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center gap-1 mb-2 flex-wrap">
+                      {t.isPenalty && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-semibold">⚠️</span>}
+                    </div>
+                    <p className="text-lg font-bold text-gray-800 line-clamp-3 mb-2">{t.title}</p>
+                  </div>
+                  <span className={`text-xs px-2 py-1 rounded-full font-semibold self-start ${t.isPenalty ? 'bg-red-100 text-red-600' : 'bg-indigo-100 text-indigo-700'}`}>
+                    {t.isPenalty ? `-${t.points}` : `+${t.points}`}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      })()}
+
       {/* 添加孩子按钮 */}
       <button
         onClick={() => setAddingChild(true)}
