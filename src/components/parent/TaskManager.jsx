@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import useStore from '../../store/useStore'
 import ConfirmModal from '../common/ConfirmModal'
 import TaskForm from './TaskForm'
@@ -12,6 +12,14 @@ export default function TaskManager() {
   const [addingChild, setAddingChild] = useState(false)
   const [confirmRemoveChild, setConfirmRemoveChild] = useState(null)
   const [childForm, setChildForm] = useState({ name: '', avatar: '👦' })
+  const longPressTimer = useRef(null)
+
+  const startLongPress = (child) => {
+    longPressTimer.current = setTimeout(() => setConfirmRemoveChild(child), 700)
+  }
+  const cancelLongPress = () => {
+    if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null }
+  }
 
   const getChild = (id) => children.find((c) => c.id === id)
 
@@ -55,15 +63,24 @@ export default function TaskManager() {
         const childTasks = tasks.filter(t => t.assignedTo === child.id)
         return (
           <div key={child.id} className="mb-8">
-            {/* 孩子头像区块标题 */}
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-2xl">
+            {/* 孩子头像卡片 */}
+            <div
+              className="bg-white rounded-3xl shadow p-4 flex items-center gap-4 mb-4 select-none"
+              onTouchStart={() => startLongPress(child)}
+              onTouchEnd={cancelLongPress}
+              onTouchMove={cancelLongPress}
+              onMouseDown={() => startLongPress(child)}
+              onMouseUp={cancelLongPress}
+              onMouseLeave={cancelLongPress}
+            >
+              <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center text-4xl flex-shrink-0">
                 {child.avatar}
               </div>
-              <div>
-                <p className="text-lg font-bold text-gray-800">{child.name}</p>
-                <p className="text-xs text-gray-400">{childTasks.length} 个任务</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-xl font-bold text-gray-800">{child.name}</p>
+                <p className="text-sm text-gray-400">⭐ {child.points ?? 0} 积分 · {childTasks.length} 个任务</p>
               </div>
+              <p className="text-xs text-gray-300 flex-shrink-0">长按删除</p>
             </div>
 
             {childTasks.length === 0 ? (
