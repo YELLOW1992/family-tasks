@@ -125,7 +125,7 @@ export default function TaskManager() {
         <ConfirmModal
           message={`确定执行扣分吗？将扣除 ${tasks.find(t => t.id === confirmPenalty)?.points} 分`}
           confirmLabel="执行扣分"
-          onConfirm={() => { executePenalty(confirmPenalty); setConfirmPenalty(null) }}
+          onConfirm={() => { executePenalty(confirmPenalty); setConfirmPenalty(null); setViewingTask(null) }}
           onCancel={() => setConfirmPenalty(null)}
         />
       )}
@@ -171,7 +171,7 @@ export default function TaskManager() {
             <div className="flex flex-col gap-3">
               {viewingTask.isPenalty && (
                 <button
-                  onClick={(e) => { e.stopPropagation(); setConfirmPenalty(viewingTask.id); setViewingTask(null) }}
+                  onClick={(e) => { e.stopPropagation(); setConfirmPenalty(viewingTask.id) }}
                   className="w-full py-3 rounded-2xl bg-red-500 text-white font-semibold text-lg active:bg-red-600"
                 >
                   执行扣分
