@@ -12,6 +12,7 @@ export default function TaskManager() {
   const [addingChild, setAddingChild] = useState(false)
   const [confirmRemoveChild, setConfirmRemoveChild] = useState(null)
   const [childForm, setChildForm] = useState({ name: '', avatar: '👦' })
+  const [selectedChildId, setSelectedChildId] = useState(null)
   const longPressTimer = useRef(null)
 
   const startLongPress = (child) => {
@@ -43,6 +44,11 @@ export default function TaskManager() {
 
   const avatarOptions = ['👦', '👧', '🧒', '👶', '🧑', '👨', '👩', '🐶', '🐱', '🐻', '🦁', '🐼']
 
+  // 自动选择第一个孩子
+  const currentChildId = selectedChildId || children[0]?.id
+  const currentChild = children.find(c => c.id === currentChildId)
+  const currentTasks = tasks.filter(t => t.assignedTo === currentChildId)
+
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-4">
@@ -59,35 +65,47 @@ export default function TaskManager() {
         </div>
       )}
 
-      {children.map((child) => {
-        const childTasks = tasks.filter(t => t.assignedTo === child.id)
-        return (
-          <div key={child.id} className="mb-8">
-            {/* 孩子头像卡片 */}
-            <div
-              className="bg-white rounded-3xl shadow p-4 flex items-center gap-4 mb-4 select-none"
+      {/* 横向头像选择栏 */}
+      {children.length > 0 && (
+        <div className="flex gap-3 mb-6 overflow-x-auto pb-2">
+          {children.map((child) => (
+            <button
+              key={child.id}
+              onClick={() => setSelectedChildId(child.id)}
               onTouchStart={() => startLongPress(child)}
               onTouchEnd={cancelLongPress}
               onTouchMove={cancelLongPress}
-              onMouseDown={() => startLongPress(child)}
-              onMouseUp={cancelLongPress}
-              onMouseLeave={cancelLongPress}
+              className={`flex-shrink-0 flex flex-col items-center gap-2 p-4 rounded-3xl transition-all ${
+                currentChildId === child.id ? 'bg-indigo-100 ring-2 ring-indigo-500' : 'bg-white'
+              }`}
             >
-              <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center text-4xl flex-shrink-0">
+              <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center text-4xl">
                 {child.avatar}
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xl font-bold text-gray-800">{child.name}</p>
-                <p className="text-sm text-gray-400">⭐ {child.points ?? 0} 积分 · {childTasks.length} 个任务</p>
-              </div>
-              <p className="text-xs text-gray-300 flex-shrink-0">长按删除</p>
-            </div>
+              <p className="text-sm font-bold text-gray-800">{child.name}</p>
+              <p className="text-xs text-gray-400">⭐ {child.points ?? 0}</p>
+            </button>
+          ))}
+          <button
+            onClick={() => setAddingChild(true)}
+            className="flex-shrink-0 w-24 h-24 rounded-3xl border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 text-3xl"
+          >
+            +
+          </button>
+        </div>
+      )}
 
-            {childTasks.length === 0 ? (
-              <p className="text-gray-400 text-sm pl-2">还没有任务</p>
-            ) : (
-              <div className="grid grid-cols-2 gap-4">
-                {childTasks.map((t) => (
+      {/* 当前选中孩子的任务 */}
+      {currentChild && (
+        <div>
+          <h3 className="text-lg font-bold text-gray-700 mb-3">
+            {currentChild.name}的任务 ({currentTasks.length})
+          </h3>
+          {currentTasks.length === 0 ? (
+            <p className="text-gray-400 text-sm text-center py-8">还没有任务</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-4">
+              {currentTasks.map((t) => (
                   <div
                     key={t.id}
                     onClick={() => setViewingTask(t)}
@@ -110,9 +128,8 @@ export default function TaskManager() {
                 ))}
               </div>
             )}
-          </div>
-        )
-      })}
+        </div>
+      )}
 
       {/* 孤立任务（分配的孩子已被删除） */}
       {(() => {
