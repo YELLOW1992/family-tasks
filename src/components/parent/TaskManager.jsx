@@ -47,7 +47,22 @@ export default function TaskManager() {
   // 自动选择第一个孩子
   const currentChildId = selectedChildId || children[0]?.id
   const currentChild = children.find(c => c.id === currentChildId)
-  const currentTasks = tasks.filter(t => t.assignedTo === currentChildId)
+
+  // 任务排序：惩罚任务置顶，每日任务第二优先，其他任务在后面
+  const currentTasks = tasks
+    .filter(t => t.assignedTo === currentChildId)
+    .sort((a, b) => {
+      // 惩罚任务优先级最高
+      if (a.isPenalty && !b.isPenalty) return -1
+      if (!a.isPenalty && b.isPenalty) return 1
+
+      // 如果都是惩罚任务或都不是，则比较是否为每日任务
+      if (a.repeat === 'daily' && b.repeat !== 'daily') return -1
+      if (a.repeat !== 'daily' && b.repeat === 'daily') return 1
+
+      // 其他情况保持原顺序
+      return 0
+    })
 
   return (
     <div className="p-6">
