@@ -74,8 +74,11 @@ const useStore = create((set, get) => ({
     set({ children: await fetchChildren() })
   },
   removeChild: async (id) => {
+    // 删除孩子的所有任务
+    await supabase.from('tasks').delete().eq('assigned_to', id)
+    // 删除孩子
     await supabase.from('children').delete().eq('id', id)
-    set({ children: await fetchChildren() })
+    set({ children: await fetchChildren(), tasks: await fetchTasks() })
   },
 
   addTask: async (task) => {
