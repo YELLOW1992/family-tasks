@@ -21,6 +21,9 @@ export default function TaskList({ childId }) {
       })
   ))
 
+  const penaltyTasks = tasks.filter(t => t.isPenalty)
+  const rewardTasks = tasks.filter(t => !t.isPenalty)
+
   if (tasks.length === 0) {
     return (
       <div className="text-center py-16 text-gray-400">
@@ -31,10 +34,36 @@ export default function TaskList({ childId }) {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-4">
-      {tasks.map((t) => (
-        <TaskCard key={t.id} task={t} childId={childId} />
-      ))}
-    </div>
+    <>
+      {/* 扣分任务区 */}
+      {penaltyTasks.length > 0 && (
+        <div className="mb-6">
+          <h3 className="text-lg font-bold text-red-600 mb-3 flex items-center gap-2">
+            <span>⚠️ 扣分任务</span>
+            <span className="text-sm text-gray-400">({penaltyTasks.length})</span>
+          </h3>
+          <div className="grid grid-cols-2 gap-4">
+            {penaltyTasks.map((t) => (
+              <TaskCard key={t.id} task={t} childId={childId} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 加分任务区 */}
+      {rewardTasks.length > 0 && (
+        <div>
+          <h3 className="text-lg font-bold text-indigo-600 mb-3 flex items-center gap-2">
+            <span>⭐ 加分任务</span>
+            <span className="text-sm text-gray-400">({rewardTasks.length})</span>
+          </h3>
+          <div className="grid grid-cols-2 gap-4">
+            {rewardTasks.map((t) => (
+              <TaskCard key={t.id} task={t} childId={childId} />
+            ))}
+          </div>
+        </div>
+      )}
+    </>
   )
 }

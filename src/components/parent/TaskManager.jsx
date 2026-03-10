@@ -113,36 +113,80 @@ export default function TaskManager() {
       {/* 当前选中孩子的任务 */}
       {currentChild && (
         <div>
-          <h3 className="text-lg font-bold text-gray-700 mb-3">
-            {currentChild.name}的任务 ({currentTasks.length})
-          </h3>
           {currentTasks.length === 0 ? (
             <p className="text-gray-400 text-sm text-center py-8">还没有任务</p>
           ) : (
-            <div className="grid grid-cols-2 gap-4">
-              {currentTasks.map((t) => (
-                  <div
-                    key={t.id}
-                    onClick={() => setViewingTask(t)}
-                    className={`bg-white rounded-3xl shadow p-4 flex flex-col justify-between cursor-pointer active:scale-95 transition-transform aspect-square ${
-                      t.isPenalty ? 'border-2 border-red-300' : t.repeat === 'daily' ? 'border-2 border-orange-300' : ''
-                    }`}
-                  >
-                    <div>
-                      <div className="flex items-center gap-1 mb-2 flex-wrap">
-                        {t.isPenalty && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-semibold">⚠️</span>}
-                        {t.repeat === 'daily' && <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-semibold">🔁</span>}
-                        {t.requirePhoto && !t.isPenalty && <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-semibold">📷</span>}
-                      </div>
-                      <p className="text-lg font-bold text-gray-800 line-clamp-3 mb-2">{t.title}</p>
+            <>
+              {/* 扣分任务区 */}
+              {(() => {
+                const penaltyTasks = currentTasks.filter(t => t.isPenalty)
+                if (penaltyTasks.length === 0) return null
+                return (
+                  <div className="mb-6">
+                    <h3 className="text-lg font-bold text-red-600 mb-3 flex items-center gap-2">
+                      <span>⚠️ 扣分任务</span>
+                      <span className="text-sm text-gray-400">({penaltyTasks.length})</span>
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      {penaltyTasks.map((t) => (
+                        <div
+                          key={t.id}
+                          onClick={() => setViewingTask(t)}
+                          className="bg-white rounded-3xl shadow p-4 flex flex-col justify-between cursor-pointer active:scale-95 transition-transform aspect-square border-2 border-red-300"
+                        >
+                          <div>
+                            <div className="flex items-center gap-1 mb-2 flex-wrap">
+                              <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-semibold">⚠️</span>
+                            </div>
+                            <p className="text-lg font-bold text-gray-800 line-clamp-3 mb-2">{t.title}</p>
+                          </div>
+                          <span className="text-xs px-2 py-1 rounded-full font-semibold self-start bg-red-100 text-red-600">
+                            -{t.points}
+                          </span>
+                        </div>
+                      ))}
                     </div>
-                    <span className={`text-xs px-2 py-1 rounded-full font-semibold self-start ${t.isPenalty ? 'bg-red-100 text-red-600' : 'bg-indigo-100 text-indigo-700'}`}>
-                      {t.isPenalty ? `-${t.points}` : `+${t.points}`}
-                    </span>
                   </div>
-                ))}
-              </div>
-            )}
+                )
+              })()}
+
+              {/* 加分任务区 */}
+              {(() => {
+                const rewardTasks = currentTasks.filter(t => !t.isPenalty)
+                if (rewardTasks.length === 0) return null
+                return (
+                  <div>
+                    <h3 className="text-lg font-bold text-indigo-600 mb-3 flex items-center gap-2">
+                      <span>⭐ 加分任务</span>
+                      <span className="text-sm text-gray-400">({rewardTasks.length})</span>
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      {rewardTasks.map((t) => (
+                        <div
+                          key={t.id}
+                          onClick={() => setViewingTask(t)}
+                          className={`bg-white rounded-3xl shadow p-4 flex flex-col justify-between cursor-pointer active:scale-95 transition-transform aspect-square ${
+                            t.repeat === 'daily' ? 'border-2 border-orange-300' : ''
+                          }`}
+                        >
+                          <div>
+                            <div className="flex items-center gap-1 mb-2 flex-wrap">
+                              {t.repeat === 'daily' && <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-semibold">🔁</span>}
+                              {t.requirePhoto && <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-semibold">📷</span>}
+                            </div>
+                            <p className="text-lg font-bold text-gray-800 line-clamp-3 mb-2">{t.title}</p>
+                          </div>
+                          <span className="text-xs px-2 py-1 rounded-full font-semibold self-start bg-indigo-100 text-indigo-700">
+                            +{t.points}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })()}
+            </>
+          )}
         </div>
       )}
 
