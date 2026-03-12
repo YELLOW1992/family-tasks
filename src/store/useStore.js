@@ -215,6 +215,13 @@ const useStore = create((set, get) => ({
     const child = get().children.find((c) => c.id === childId)
     if (!reward || !child) return
     if (!reward.available || child.points < reward.cost) return
+
+    // Check redemption limit
+    if (reward.max_redemptions !== null && reward.max_redemptions !== undefined) {
+      const redemptionCount = get().redemptions.filter((rd) => rd.rewardId === rewardId).length
+      if (redemptionCount >= reward.max_redemptions) return
+    }
+
     await supabase.from('redemptions').insert({ reward_id: rewardId, child_id: childId, status: 'pending' })
     await supabase.from('children').update({ points: child.points - reward.cost }).eq('id', childId)
     await supabase.from('point_history').insert({

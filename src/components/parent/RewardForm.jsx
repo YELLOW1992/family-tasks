@@ -10,14 +10,22 @@ export default function RewardForm({ reward, onClose }) {
     description: reward?.description || '',
     cost: reward?.cost || 50,
     icon: reward?.icon || '🎁',
+    maxRedemptions: reward?.max_redemptions || null,
   })
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }))
 
   const handleSave = () => {
     if (!form.title.trim()) return
-    if (reward) updateReward(reward.id, form)
-    else addReward(form)
+    const data = {
+      title: form.title,
+      description: form.description,
+      cost: form.cost,
+      icon: form.icon,
+      max_redemptions: form.maxRedemptions,
+    }
+    if (reward) updateReward(reward.id, data)
+    else addReward(data)
     onClose()
   }
 
@@ -51,6 +59,19 @@ export default function RewardForm({ reward, onClose }) {
           value={form.cost}
           onChange={(e) => set('cost', Number(e.target.value))}
         />
+
+        <label className="block text-gray-600 font-semibold mb-1">兑换次数限制</label>
+        <div className="mb-4">
+          <input
+            type="number"
+            min={1}
+            className="w-full border-2 border-gray-200 rounded-2xl px-5 py-4 text-xl focus:border-indigo-400 outline-none"
+            placeholder="不限制（留空表示无限次）"
+            value={form.maxRedemptions || ''}
+            onChange={(e) => set('maxRedemptions', e.target.value ? Number(e.target.value) : null)}
+          />
+          <p className="text-sm text-gray-500 mt-2">留空表示可以无限次兑换</p>
+        </div>
 
         <label className="block text-gray-600 font-semibold mb-3">图标</label>
         <div className="flex flex-wrap gap-3 mb-8">
