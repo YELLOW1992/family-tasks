@@ -3,6 +3,7 @@ import TaskManager from './TaskManager'
 import ApprovalQueue from './ApprovalQueue'
 import RewardManager from './RewardManager'
 import ChildProfiles from './ChildProfiles'
+import PetManager from './PetManager'
 import useStore from '../../store/useStore'
 import { refreshData } from '../../supabaseSync'
 
@@ -10,6 +11,7 @@ const TABS = [
   { id: 'tasks', label: '任务', icon: '📋' },
   { id: 'approvals', label: '待审批', icon: '✅' },
   { id: 'rewards', label: '奖励', icon: '🎁' },
+  { id: 'pets', label: '宠物', icon: '🐾' },
   { id: 'children', label: '孩子', icon: '👧' },
 ]
 
@@ -98,6 +100,7 @@ export default function ParentDashboard({ onExit }) {
         {tab === 'tasks' && <TaskManager />}
         {tab === 'approvals' && <ApprovalQueue />}
         {tab === 'rewards' && <RewardManager />}
+        {tab === 'pets' && <PetManager />}
         {tab === 'children' && <ChildProfiles />}
       </div>
 

@@ -51,6 +51,22 @@ async function fetchPointHistory() {
   return data || []
 }
 
+async function fetchPetItems() {
+  const { data } = await supabase.from('pet_items').select('*')
+  return data || []
+}
+
+async function fetchPetRedemptions() {
+  const { data } = await supabase.from('pet_redemptions').select('*')
+  return data || []
+}
+
+async function fetchPetSchedule() {
+  const { data } = await supabase.from('config').select('*').eq('key', 'pet_schedule')
+  if (data && data.length > 0) return JSON.parse(data[0].value)
+  return null
+}
+
 const useStore = create((set, get) => ({
   pin: null,
   children: [],
@@ -58,6 +74,9 @@ const useStore = create((set, get) => ({
   rewards: [],
   redemptions: [],
   pointHistory: [],
+  petItems: [],
+  petRedemptions: [],
+  petSchedule: null,
 
   setPin: async (pin) => {
     await supabase.from('config').upsert({ key: 'pin', value: pin })
@@ -236,6 +255,54 @@ const useStore = create((set, get) => ({
   fulfillRedemption: async (id) => {
     await supabase.from('redemptions').update({ status: 'fulfilled' }).eq('id', id)
     set({ redemptions: await fetchRedemptions() })
+  },
+
+  // 宠物商店
+  addPetItem: async (item) => {
+    await supabase.from('pet_items').insert({
+      name: item.name,
+      description: item.description || '',
+      icon: item.icon || '🎁',
+      cost: item.cost,
+      available: true,
+    })
+    set({ petItems: await fetchPetItems() })
+  },
+  updatePetItem: async (id, updates) => {
+    await supabase.from('pet_items').update(updates).eq('id', id)
+    set({ petItems: await fetchPetItems() })
+  },
+  removePetItem: async (id) => {
+    await supabase.from('pet_items').delete().eq('id', id)
+    set({ petItems: await fetchPetItems() })
+  },
+  redeemPetItem: async (itemId, childId) => {
+    const item = get().petItems.find((i) => i.id === itemId)
+    const child = get().children.find((c) => c.id === childId)
+    if (!item || !child || child.points < item.cost) return
+    await supabase.from('pet_redemptions').insert({ item_id: itemId, child_id: childId })
+    await supabase.from('children').update({ points: child.points - item.cost }).eq('id', childId)
+    await supabase.from('point_history').insert({
+      child_id: childId,
+      date: today(),
+      points: -item.cost,
+      reason: '宠物用品：' + item.name,
+      type: 'reward',
+    })
+    set({ children: await fetchChildren(), petRedemptions: await fetchPetRedemptions(), pointHistory: await fetchPointHistory() })
+  },
+  setPetSchedule: async (schedule) => {
+    const value = JSON.stringify(schedule)
+    await supabase.from('config').upsert({ key: 'pet_schedule', value })
+    set({ petSchedule: schedule })
+  },
+  loadPetData: async () => {
+    const [petItems, petRedemptions, petSchedule] = await Promise.all([
+      fetchPetItems(),
+      fetchPetRedemptions(),
+      fetchPetSchedule(),
+    ])
+    set({ petItems, petRedemptions, petSchedule })
   },
 }))
 
