@@ -3,7 +3,7 @@ import useStore from '../../store/useStore'
 import Avatar from '../common/Avatar'
 import TaskList from './TaskList'
 import RewardShop from './RewardShop'
-import PetShop from './PetShop'
+import PetHome from './PetHome'
 import TaskCalendar from './TaskCalendar'
 import PointLedger from './PointLedger'
 import { refreshData } from '../../supabaseSync'
@@ -88,7 +88,7 @@ export default function ChildDashboard({ child, onExit }) {
       <div className="flex-1 overflow-y-auto p-6 pb-24">
         {tab === 'tasks' && <TaskList childId={child.id} />}
         {tab === 'rewards' && <RewardShop childId={child.id} />}
-        {tab === 'pets' && <PetShop childId={child.id} />}
+        {tab === 'pets' && <PetHome childId={child.id} />}
         {tab === 'ledger' && <PointLedger childId={child.id} />}
         {tab === 'calendar' && <TaskCalendar childId={child.id} />}
       </div>

@@ -67,6 +67,16 @@ async function fetchPetSchedule() {
   return null
 }
 
+async function fetchPetSpecies() {
+  const { data } = await supabase.from('pet_species').select('*')
+  return data || []
+}
+
+async function fetchOwnedPets() {
+  const { data } = await supabase.from('owned_pets').select('*')
+  return data || []
+}
+
 const useStore = create((set, get) => ({
   pin: null,
   children: [],
@@ -77,6 +87,8 @@ const useStore = create((set, get) => ({
   petItems: [],
   petRedemptions: [],
   petSchedule: null,
+  petSpecies: [],
+  ownedPets: [],
 
   setPin: async (pin) => {
     await supabase.from('config').upsert({ key: 'pin', value: pin })
@@ -297,12 +309,113 @@ const useStore = create((set, get) => ({
     set({ petSchedule: schedule })
   },
   loadPetData: async () => {
-    const [petItems, petRedemptions, petSchedule] = await Promise.all([
+    const [petItems, petRedemptions, petSchedule, petSpecies, ownedPets] = await Promise.all([
       fetchPetItems(),
       fetchPetRedemptions(),
       fetchPetSchedule(),
+      fetchPetSpecies(),
+      fetchOwnedPets(),
     ])
-    set({ petItems, petRedemptions, petSchedule })
+    set({ petItems, petRedemptions, petSchedule, petSpecies, ownedPets })
+  },
+
+  // 宠物种类管理（家长）
+  addPetSpecies: async (species) => {
+    await supabase.from('pet_species').insert({
+      name: species.name,
+      icon: species.icon || '🐱',
+      description: species.description || '',
+      cost: species.cost,
+      available: true,
+    })
+    set({ petSpecies: await fetchPetSpecies() })
+  },
+  updatePetSpecies: async (id, updates) => {
+    await supabase.from('pet_species').update(updates).eq('id', id)
+    set({ petSpecies: await fetchPetSpecies() })
+  },
+  removePetSpecies: async (id) => {
+    await supabase.from('pet_species').delete().eq('id', id)
+    set({ petSpecies: await fetchPetSpecies() })
+  },
+
+  // 购买宠物（孩子）
+  buyPet: async (speciesId, childId, petName) => {
+    const species = get().petSpecies.find((s) => s.id === speciesId)
+    const child = get().children.find((c) => c.id === childId)
+    if (!species || !child || child.points < species.cost) return
+    const now = new Date().toISOString()
+    await supabase.from('owned_pets').insert({
+      species_id: speciesId,
+      child_id: childId,
+      name: petName,
+      level: 1,
+      exp: 0,
+      hunger: 80,
+      thirst: 80,
+      cleanliness: 80,
+      happiness: 80,
+      health: 100,
+      last_fed: now,
+      last_watered: now,
+      last_bathed: now,
+      last_played: now,
+    })
+    await supabase.from('children').update({ points: child.points - species.cost }).eq('id', childId)
+    await supabase.from('point_history').insert({
+      child_id: childId,
+      date: today(),
+      points: -species.cost,
+      reason: '购买宠物：' + petName,
+      type: 'reward',
+    })
+    set({ children: await fetchChildren(), ownedPets: await fetchOwnedPets(), pointHistory: await fetchPointHistory() })
+  },
+
+  // 宠物护理操作（孩子）
+  petCare: async (petId, action, childId, cost) => {
+    const child = get().children.find((c) => c.id === childId)
+    if (!child || child.points < cost) return
+    const now = new Date().toISOString()
+    const statMap = {
+      feed:  { hunger: 95, last_fed: now },
+      water: { thirst: 95, last_watered: now },
+      bath:  { cleanliness: 95, last_bathed: now },
+      play:  { happiness: 95, last_played: now },
+    }
+    const updates = statMap[action]
+    if (!updates) return
+    // add exp
+    const pet = get().ownedPets.find((p) => p.id === petId)
+    if (!pet) return
+    const newExp = (pet.exp || 0) + 10
+    const newLevel = Math.floor(newExp / 100) + 1
+    await supabase.from('owned_pets').update({ ...updates, exp: newExp, level: newLevel }).eq('id', petId)
+    if (cost > 0) {
+      await supabase.from('children').update({ points: child.points - cost }).eq('id', childId)
+      await supabase.from('point_history').insert({
+        child_id: childId,
+        date: today(),
+        points: -cost,
+        reason: { feed: '喂食宠物', water: '给宠物喝水', bath: '给宠物洗澡', play: '陪宠物玩耍' }[action],
+        type: 'reward',
+      })
+    }
+    set({ ownedPets: await fetchOwnedPets(), children: await fetchChildren(), pointHistory: await fetchPointHistory() })
+  },
+
+  // 使用宠物用品
+  usePetItem: async (petId, itemRedemptionId, childId) => {
+    const pet = get().ownedPets.find((p) => p.id === petId)
+    const item = get().petRedemptions.find((r) => r.id === itemRedemptionId)
+    if (!pet || !item || item.used) return
+    await supabase.from('owned_pets').update({
+      hunger: Math.min(100, (pet.hunger || 0) + 20),
+      happiness: Math.min(100, (pet.happiness || 0) + 20),
+      exp: (pet.exp || 0) + 20,
+    }).eq('id', petId)
+    await supabase.from('pet_redemptions').update({ used: true }).eq('id', itemRedemptionId)
+    set({ ownedPets: await fetchOwnedPets(), petRedemptions: await fetchPetRedemptions() })
   },
 }))
 
