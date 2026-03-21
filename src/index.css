@@ -10,3 +10,81 @@ body {
   font-family: system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+
+/* 宠物动画 */
+@keyframes pet-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes pet-bounce {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  20% { transform: scale(1.3) rotate(-8deg); }
+  40% { transform: scale(1.3) rotate(8deg); }
+  60% { transform: scale(1.1) rotate(-4deg); }
+  80% { transform: scale(1.1) rotate(4deg); }
+}
+
+@keyframes pet-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px) rotate(-5deg); }
+  40% { transform: translateX(8px) rotate(5deg); }
+  60% { transform: translateX(-5px) rotate(-3deg); }
+  80% { transform: translateX(5px) rotate(3deg); }
+}
+
+@keyframes pet-spin-bounce {
+  0% { transform: scale(1) rotate(0deg); }
+  30% { transform: scale(1.4) rotate(180deg); }
+  60% { transform: scale(1.2) rotate(340deg); }
+  100% { transform: scale(1) rotate(360deg); }
+}
+
+@keyframes level-up {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.5); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1) rotate(180deg); }
+}
+
+@keyframes heart-pop {
+  0% { transform: scale(0) translateY(0); opacity: 1; }
+  100% { transform: scale(1.5) translateY(-40px); opacity: 0; }
+}
+
+@keyframes stat-fill {
+  from { width: 0%; }
+}
+
+.pet-float {
+  animation: pet-float 3s ease-in-out infinite;
+}
+
+.pet-bounce {
+  animation: pet-bounce 0.6s ease-in-out;
+}
+
+.pet-shake {
+  animation: pet-shake 0.5s ease-in-out;
+}
+
+.pet-spin {
+  animation: pet-spin-bounce 0.7s ease-in-out;
+}
+
+.level-up-anim {
+  animation: level-up 0.6s ease-in-out 3;
+}
+
+.sparkle {
+  animation: sparkle 0.8s ease-in-out infinite;
+}
+
+.heart-pop {
+  animation: heart-pop 1s ease-out forwards;
+  pointer-events: none;
+}

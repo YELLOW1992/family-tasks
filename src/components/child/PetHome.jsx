@@ -1,12 +1,12 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import useStore from '../../store/useStore'
 import PetShop from './PetShop'
 
 const CARE_ACTIONS = [
-  { id: 'feed',  label: '喂食',   icon: '🍖', cost: 2,  stat: 'hunger',      color: 'bg-orange-100 text-orange-700 active:bg-orange-200' },
-  { id: 'water', label: '喝水',   icon: '💧', cost: 1,  stat: 'thirst',      color: 'bg-blue-100 text-blue-700 active:bg-blue-200' },
-  { id: 'bath',  label: '洗澡',   icon: '🛁', cost: 3,  stat: 'cleanliness', color: 'bg-cyan-100 text-cyan-700 active:bg-cyan-200' },
-  { id: 'play',  label: '陪玩',   icon: '🎾', cost: 2,  stat: 'happiness',   color: 'bg-pink-100 text-pink-700 active:bg-pink-200' },
+  { id: 'feed',  label: '喂食',   icon: '🍖', cost: 2,  stat: 'hunger',      color: 'bg-orange-100 text-orange-700 active:bg-orange-200', emoji: '❤️' },
+  { id: 'water', label: '喝水',   icon: '💧', cost: 1,  stat: 'thirst',      color: 'bg-blue-100 text-blue-700 active:bg-blue-200', emoji: '💦' },
+  { id: 'bath',  label: '洗澡',   icon: '🛁', cost: 3,  stat: 'cleanliness', color: 'bg-cyan-100 text-cyan-700 active:bg-cyan-200', emoji: '✨' },
+  { id: 'play',  label: '陪玩',   icon: '🎾', cost: 2,  stat: 'happiness',   color: 'bg-pink-100 text-pink-700 active:bg-pink-200', emoji: '🎉' },
 ]
 
 const STAT_LABELS = {
@@ -17,12 +17,31 @@ const STAT_LABELS = {
   health:      { label: '健康', icon: '❤️', color: 'bg-red-400' },
 }
 
+function FloatingEmoji({ emoji, id, onDone }) {
+  useEffect(() => {
+    const t = setTimeout(onDone, 1000)
+    return () => clearTimeout(t)
+  }, [])
+  return (
+    <div
+      key={id}
+      className="heart-pop absolute text-3xl"
+      style={{ left: '50%', top: '10%', transform: 'translateX(-50%)' }}
+    >
+      {emoji}
+    </div>
+  )
+}
+
 function StatBar({ value, colorClass }) {
   const pct = Math.max(0, Math.min(100, value || 0))
   const barColor = pct > 60 ? colorClass : pct > 30 ? 'bg-yellow-400' : 'bg-red-400'
   return (
     <div className="flex-1 bg-gray-100 rounded-full h-3 overflow-hidden">
-      <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: `${pct}%` }} />
+      <div
+        className={`h-full rounded-full transition-all duration-700 ${barColor}`}
+        style={{ width: `${pct}%`, animation: 'stat-fill 0.7s ease-out' }}
+      />
     </div>
   )
 }
@@ -30,8 +49,11 @@ function StatBar({ value, colorClass }) {
 function PetCard({ pet, species, childId, points }) {
   const { petCare, petRedemptions, usePetItem } = useStore()
   const [acting, setActing] = useState(null)
+  const [petAnim, setPetAnim] = useState('pet-float')
+  const [floatingEmojis, setFloatingEmojis] = useState([])
+  const [levelUp, setLevelUp] = useState(false)
+  const emojiCountRef = useRef(0)
 
-  // compute degraded stats based on time elapsed
   const degrade = (val, lastTime, ratePerHour) => {
     if (!lastTime) return val
     const hours = (Date.now() - new Date(lastTime).getTime()) / 3600000
@@ -43,60 +65,114 @@ function PetCard({ pet, species, childId, points }) {
   const cleanliness = degrade(pet.cleanliness, pet.last_bathed,  2)
   const happiness   = degrade(pet.happiness,   pet.last_played,  3)
   const health      = Math.round((hunger + thirst + cleanliness + happiness) / 4)
-
   const stats = { hunger, thirst, cleanliness, happiness, health }
 
-  // unused items for this child
   const unusedItems = petRedemptions.filter(
     (r) => r.child_id === childId && !r.used
   )
 
+  const triggerAnim = (animClass) => {
+    setPetAnim(animClass)
+    setTimeout(() => setPetAnim('pet-float'), 800)
+  }
+
+  const addFloatingEmoji = (emoji) => {
+    const id = ++emojiCountRef.current
+    setFloatingEmojis((prev) => [...prev, { id, emoji }])
+  }
+
+  const removeEmoji = (id) => {
+    setFloatingEmojis((prev) => prev.filter((e) => e.id !== id))
+  }
+
   const handleCare = async (action) => {
     if (acting) return
     setActing(action.id)
+    const prevLevel = pet.level
+    // trigger pet animation
+    const animMap = { feed: 'pet-bounce', water: 'pet-shake', bath: 'pet-spin', play: 'pet-bounce' }
+    triggerAnim(animMap[action.id] || 'pet-bounce')
+    addFloatingEmoji(action.emoji)
     await petCare(pet.id, action.id, childId, action.cost)
+    // check level up
+    const newExp = (pet.exp || 0) + 10
+    if (Math.floor(newExp / 100) + 1 > prevLevel) {
+      setLevelUp(true)
+      setTimeout(() => setLevelUp(false), 2000)
+    }
     setActing(null)
   }
 
-  const expForNext = 100
   const expPct = ((pet.exp || 0) % 100)
   const mood = health > 70 ? '😄' : health > 40 ? '😐' : '😢'
 
+  // background gradient based on health
+  const bgGradient = health > 70
+    ? 'from-green-50 to-blue-50'
+    : health > 40
+    ? 'from-yellow-50 to-orange-50'
+    : 'from-red-50 to-pink-50'
+
   return (
-    <div className="bg-white rounded-3xl shadow-lg p-5 flex flex-col gap-4">
+    <div className={`bg-gradient-to-br ${bgGradient} rounded-3xl shadow-lg p-5 flex flex-col gap-4 relative overflow-hidden`}>
+      {/* 星星背景装饰 */}
+      <div className="absolute top-2 right-4 text-yellow-200 text-2xl opacity-60" style={{ animation: 'sparkle 2s ease-in-out infinite' }}>✦</div>
+      <div className="absolute top-8 right-12 text-pink-200 text-lg opacity-60" style={{ animation: 'sparkle 2.5s ease-in-out infinite 0.5s' }}>✦</div>
+      <div className="absolute top-3 right-8 text-blue-200 text-sm opacity-60" style={{ animation: 'sparkle 1.8s ease-in-out infinite 1s' }}>✦</div>
+
       {/* 宠物头部 */}
       <div className="flex items-center gap-4">
         <div className="relative">
-          <div className="text-7xl">{species?.icon || '🐾'}</div>
+          {/* 浮动 emoji */}
+          {floatingEmojis.map((e) => (
+            <FloatingEmoji key={e.id} id={e.id} emoji={e.emoji} onDone={() => removeEmoji(e.id)} />
+          ))}
+          <div
+            className={`text-7xl select-none cursor-pointer ${petAnim} ${levelUp ? 'level-up-anim' : ''}`}
+            onClick={() => { triggerAnim('pet-bounce'); addFloatingEmoji('💕') }}
+          >
+            {species?.icon || '🐾'}
+          </div>
           <span className="absolute -bottom-1 -right-1 text-2xl">{mood}</span>
+          {levelUp && (
+            <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-yellow-500 font-black text-sm whitespace-nowrap" style={{ animation: 'heart-pop 1.5s ease-out forwards' }}>
+              ⬆️ 升级啦！
+            </div>
+          )}
         </div>
         <div className="flex-1">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <h3 className="text-2xl font-bold text-gray-800">{pet.name}</h3>
-            <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 text-sm font-bold">Lv.{pet.level}</span>
+            <span className={`px-2 py-0.5 rounded-full text-sm font-bold ${levelUp ? 'bg-yellow-400 text-white level-up-anim' : 'bg-indigo-100 text-indigo-700'}`}>
+              Lv.{pet.level}
+            </span>
           </div>
           <p className="text-gray-500 text-sm">{species?.name}</p>
-          {/* 经验条 */}
           <div className="mt-2">
             <div className="flex justify-between text-xs text-gray-400 mb-1">
               <span>经验</span>
-              <span>{expPct}/{expForNext}</span>
+              <span>{expPct}/100</span>
             </div>
-            <div className="bg-gray-100 rounded-full h-2">
-              <div className="bg-indigo-400 h-full rounded-full transition-all" style={{ width: `${expPct}%` }} />
+            <div className="bg-gray-200 rounded-full h-2 overflow-hidden">
+              <div
+                className="bg-indigo-400 h-full rounded-full transition-all duration-700"
+                style={{ width: `${expPct}%` }}
+              />
             </div>
           </div>
         </div>
       </div>
 
       {/* 状态条 */}
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 bg-white/60 rounded-2xl p-3">
         {Object.entries(STAT_LABELS).map(([key, cfg]) => (
           <div key={key} className="flex items-center gap-2">
             <span className="text-base w-5">{cfg.icon}</span>
             <span className="text-xs text-gray-500 w-8">{cfg.label}</span>
             <StatBar value={stats[key]} colorClass={cfg.color} />
-            <span className="text-xs text-gray-400 w-8 text-right">{stats[key]}</span>
+            <span className={`text-xs w-8 text-right font-bold ${
+              stats[key] > 60 ? 'text-green-600' : stats[key] > 30 ? 'text-yellow-600' : 'text-red-500'
+            }`}>{stats[key]}</span>
           </div>
         ))}
       </div>
@@ -108,27 +184,31 @@ function PetCard({ pet, species, childId, points }) {
             key={action.id}
             onClick={() => handleCare(action)}
             disabled={!!acting || points < action.cost}
-            className={`py-3 rounded-2xl font-bold text-base flex items-center justify-center gap-2 disabled:opacity-40 ${action.color}`}
+            className={`py-3 rounded-2xl font-bold text-base flex items-center justify-center gap-2 disabled:opacity-40 transition-transform active:scale-95 shadow-sm ${action.color}`}
           >
-            <span>{action.icon}</span>
+            <span className={acting === action.id ? 'pet-spin' : ''}>{action.icon}</span>
             <span>{action.label}</span>
-            <span className="text-xs opacity-70">-{action.cost}分</span>
+            <span className="text-xs opacity-60">-{action.cost}分</span>
           </button>
         ))}
       </div>
 
-      {/* 使用宠物用品 */}
+      {/* 宠物用品背包 */}
       {unusedItems.length > 0 && (
-        <div>
-          <p className="text-sm font-semibold text-gray-600 mb-2">🎁 背包用品</p>
+        <div className="bg-white/60 rounded-2xl p-3">
+          <p className="text-sm font-semibold text-gray-600 mb-2">🎒 背包用品</p>
           <div className="flex flex-wrap gap-2">
             {unusedItems.map((item) => {
               const itemData = useStore.getState().petItems.find((i) => i.id === item.item_id)
               return (
                 <button
                   key={item.id}
-                  onClick={() => usePetItem(pet.id, item.id, childId)}
-                  className="px-3 py-2 rounded-xl bg-purple-100 text-purple-700 font-semibold text-sm active:bg-purple-200"
+                  onClick={() => {
+                    triggerAnim('pet-bounce')
+                    addFloatingEmoji('🌟')
+                    usePetItem(pet.id, item.id, childId)
+                  }}
+                  className="px-3 py-2 rounded-xl bg-purple-100 text-purple-700 font-semibold text-sm active:scale-95 transition-transform"
                 >
                   {itemData?.icon || '🎁'} {itemData?.name || '用品'}
                 </button>
@@ -147,17 +227,19 @@ export default function PetHome({ childId }) {
   const myPets = ownedPets.filter((p) => p.child_id === childId)
   const [showShop, setShowShop] = useState(false)
 
+  useEffect(() => { loadPetData() }, [])
+
   return (
     <div>
       {/* 标题栏 */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-          <span className="text-3xl">🏡</span>
+          <span className="text-3xl" style={{ animation: 'pet-float 2s ease-in-out infinite' }}>🏡</span>
           <h2 className="text-xl font-bold text-gray-800">我的宠物</h2>
         </div>
         <button
           onClick={() => setShowShop(true)}
-          className="px-4 py-2 rounded-2xl bg-pink-500 text-white font-bold text-sm active:bg-pink-600"
+          className="px-4 py-2 rounded-2xl bg-pink-500 text-white font-bold text-sm active:scale-95 transition-transform shadow"
         >
           🏪 领养宠物
         </button>
@@ -165,12 +247,12 @@ export default function PetHome({ childId }) {
 
       {myPets.length === 0 ? (
         <div className="text-center py-20">
-          <div className="text-7xl mb-4">🐾</div>
+          <div className="text-7xl mb-4 pet-float inline-block">🐾</div>
           <p className="text-xl font-bold text-gray-600 mb-2">还没有宠物</p>
           <p className="text-gray-400 mb-6">去领养中心领养一只吧！</p>
           <button
             onClick={() => setShowShop(true)}
-            className="px-8 py-3 rounded-2xl bg-pink-500 text-white font-bold text-lg active:bg-pink-600"
+            className="px-8 py-3 rounded-2xl bg-pink-500 text-white font-bold text-lg active:scale-95 transition-transform shadow"
           >
             🏪 去领养
           </button>
