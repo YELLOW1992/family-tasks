@@ -339,6 +339,12 @@ const useStore = create((set, get) => ({
     set({ petSpecies: await fetchPetSpecies() })
   },
 
+  // 删除宠物（孩子）
+  removePet: async (petId) => {
+    await supabase.from('owned_pets').delete().eq('id', petId)
+    set({ ownedPets: await fetchOwnedPets() })
+  },
+
   // 购买宠物（孩子）
   buyPet: async (speciesId, childId, petName) => {
     const species = get().petSpecies.find((s) => s.id === speciesId)

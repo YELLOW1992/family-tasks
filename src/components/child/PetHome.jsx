@@ -47,11 +47,12 @@ function StatBar({ value, colorClass }) {
 }
 
 function PetCard({ pet, species, childId, points }) {
-  const { petCare, petRedemptions, usePetItem } = useStore()
+  const { petCare, petRedemptions, usePetItem, removePet } = useStore()
   const [acting, setActing] = useState(null)
   const [petAnim, setPetAnim] = useState('pet-float')
   const [floatingEmojis, setFloatingEmojis] = useState([])
   const [levelUp, setLevelUp] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const emojiCountRef = useRef(0)
 
   const degrade = (val, lastTime, ratePerHour) => {
@@ -146,6 +147,12 @@ function PetCard({ pet, species, childId, points }) {
             <span className={`px-2 py-0.5 rounded-full text-sm font-bold ${levelUp ? 'bg-yellow-400 text-white level-up-anim' : 'bg-indigo-100 text-indigo-700'}`}>
               Lv.{pet.level}
             </span>
+            <button
+              onClick={() => setConfirmDelete(true)}
+              className="ml-auto text-xs text-red-400 hover:text-red-600 px-2 py-1 rounded-lg hover:bg-red-50 transition-colors"
+            >
+              🗑️ 删除
+            </button>
           </div>
           <p className="text-gray-500 text-sm">{species?.name}</p>
           <div className="mt-2">
@@ -214,6 +221,33 @@ function PetCard({ pet, species, childId, points }) {
                 </button>
               )
             })}
+          </div>
+        </div>
+      )}
+
+      {/* 删除确认弹窗 */}
+      {confirmDelete && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setConfirmDelete(false)}>
+          <div className="bg-white rounded-3xl p-6 mx-6 w-full max-w-sm shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="text-center mb-4">
+              <div className="text-5xl mb-3">{species?.icon || '🐾'}</div>
+              <h3 className="text-xl font-bold text-gray-800">确认删除宠物？</h3>
+              <p className="text-gray-500 mt-2 text-sm">「{pet.name}」将永久离开，无法恢复。</p>
+            </div>
+            <div className="flex gap-3 mt-5">
+              <button
+                onClick={() => setConfirmDelete(false)}
+                className="flex-1 py-3 rounded-2xl bg-gray-100 text-gray-700 font-semibold text-base active:bg-gray-200"
+              >
+                取消
+              </button>
+              <button
+                onClick={async () => { await removePet(pet.id); setConfirmDelete(false) }}
+                className="flex-1 py-3 rounded-2xl bg-red-500 text-white font-semibold text-base active:bg-red-600"
+              >
+                确认删除
+              </button>
+            </div>
           </div>
         </div>
       )}
