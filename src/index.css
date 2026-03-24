@@ -202,3 +202,26 @@ body {
 }
 
 .glow-pulse { animation: glow-pulse 2s ease-in-out infinite; }
+
+/* 宠物呼吸（待机轻微缩放） */
+@keyframes pet-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.045); }
+}
+
+/* 宠物开心弹跳（浮动+缩放） */
+@keyframes pet-happy-bob {
+  0%, 100% { transform: translateY(0) scale(1); }
+  30% { transform: translateY(-10px) scale(1.06); }
+  60% { transform: translateY(-5px) scale(1.03); }
+}
+
+/* 宠物难过轻摇 */
+@keyframes pet-sad-sway {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(3px) rotate(2deg); }
+}
+
+.pet-breathe { animation: pet-breathe 3.5s ease-in-out infinite; }
+.pet-happy-bob { animation: pet-happy-bob 1.8s ease-in-out infinite; }
+.pet-sad-sway { animation: pet-sad-sway 3s ease-in-out infinite; }

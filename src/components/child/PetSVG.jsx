@@ -1,306 +1,393 @@
-// Q版宠物SVG角色库
+// Q版宠物SVG角色库 v2 — 精致版
 // stage: 'baby'|'adult'|'evolved'  mood: 'happy'|'neutral'|'sad'
 
 const P = {
-  cat:    { b:'#FFAC7A', h:'#FFD4BA', i:'#FFB3DE', s:'#FF6B6B', e:'#7A3B10' },
-  dog:    { b:'#D4956A', h:'#EBC49A', i:'#FFCBA4', s:'#6BC5FF', e:'#5C3317' },
-  rabbit: { b:'#F0F0F0', h:'#FAFAFA', i:'#FFB3C8', s:'#B8A4FF', e:'#555'   },
-  bear:   { b:'#8B6347', h:'#A0795A', i:'#C49A78', s:'#4CAF50', e:'#3E2000' },
-  bird:   { b:'#5BA4E0', h:'#7AC0F5', i:'#FFE082', s:'#FF8A65', e:'#1A3A5C' },
-  def:    { b:'#B88FE0', h:'#CCA8F5', i:'#FFB3DE', s:'#FFD54F', e:'#4A2070' },
+  cat:    { b:'#FFAC7A', h:'#FFE0C8', i:'#FFB3DE', s:'#FF7043', e:'#3E2000', iris:'#26A69A' },
+  dog:    { b:'#D4956A', h:'#F0C899', i:'#FFCBA4', s:'#5C9EE0', e:'#3E1A00', iris:'#795548' },
+  rabbit: { b:'#EDE7F6', h:'#FAFAFA', i:'#F48FB1', s:'#CE93D8', e:'#4A148C', iris:'#7E57C2' },
+  bear:   { b:'#8B6347', h:'#C49A78', i:'#D7B89A', s:'#4CAF50', e:'#1B0000', iris:'#5D4037' },
+  bird:   { b:'#42A5F5', h:'#90CAF9', i:'#FFE082', s:'#FF7043', e:'#0D2137', iris:'#1565C0' },
+  def:    { b:'#B39DDB', h:'#D1C4E9', i:'#F8BBD9', s:'#FFD54F', e:'#311B92', iris:'#7B1FA2' },
 }
 
-function Eyes({ mood, lx=46, rx=74, y=60, c='#333' }) {
-  if (mood === 'happy') return (<>
-    <path d={`M${lx-6},${y} Q${lx},${y-7} ${lx+6},${y}`} stroke={c} strokeWidth="2.5" fill="none" strokeLinecap="round"/>
-    <path d={`M${rx-6},${y} Q${rx},${y-7} ${rx+6},${y}`} stroke={c} strokeWidth="2.5" fill="none" strokeLinecap="round"/>
-  </>)
-  if (mood === 'sad') return (<>
-    <path d={`M${lx-6},${y-3} Q${lx},${y+4} ${lx+6},${y-3}`} stroke={c} strokeWidth="2.5" fill="none" strokeLinecap="round"/>
-    <path d={`M${rx-6},${y-3} Q${rx},${y+4} ${rx+6},${y-3}`} stroke={c} strokeWidth="2.5" fill="none" strokeLinecap="round"/>
-  </>)
-  return (<>
-    <circle cx={lx} cy={y} r="4.5" fill={c}/>
-    <circle cx={lx+1.5} cy={y-1.5} r="1.5" fill="white"/>
-    <circle cx={rx} cy={y} r="4.5" fill={c}/>
-    <circle cx={rx+1.5} cy={y-1.5} r="1.5" fill="white"/>
-  </>)
-}
-function Blush({ lx=38, rx=82, y=72 }) {
-  return (<>
-    <ellipse cx={lx} cy={y} rx="7" ry="4" fill="#FFB3C8" opacity="0.6"/>
-    <ellipse cx={rx} cy={y} rx="7" ry="4" fill="#FFB3C8" opacity="0.6"/>
-  </>)
-}
-
-function Tear({ x=44, y=68 }) {
-  return <ellipse cx={x} cy={y+8} rx="2" ry="3" fill="#90CAF9" opacity="0.9"/>
-}
-
-function Mouth({ mood, cx=60, y=80 }) {
-  if (mood === 'happy') return <path d={`M${cx-8},${y} Q${cx},${y+7} ${cx+8},${y}`} stroke="#C0604A" strokeWidth="2" fill="none" strokeLinecap="round"/>
-  if (mood === 'sad')   return <path d={`M${cx-7},${y+5} Q${cx},${y-2} ${cx+7},${y+5}`} stroke="#C0604A" strokeWidth="2" fill="none" strokeLinecap="round"/>
-  return <path d={`M${cx-5},${y+1} Q${cx},${y+4} ${cx+5},${y+1}`} stroke="#C0604A" strokeWidth="2" fill="none" strokeLinecap="round"/>
-}
-
-function Crown({ cx=60, y=14 }) {
+// Shared big-eye renderer
+function BigEye({ cx, cy, r=9, irisColor='#26A69A', pupilColor='#1A0A00', mood='neutral', flip=false }) {
+  if (mood === 'happy') {
+    const d = flip
+      ? `M${cx+r},${cy} Q${cx},${cy-r*1.1} ${cx-r},${cy}`
+      : `M${cx-r},${cy} Q${cx},${cy-r*1.1} ${cx+r},${cy}`
+    return <path d={d} stroke={pupilColor} strokeWidth="3" fill="none" strokeLinecap="round"/>
+  }
+  if (mood === 'sad') {
+    return (
+      <g>
+        <circle cx={cx} cy={cy} r={r} fill={irisColor} opacity="0.9"/>
+        <circle cx={cx} cy={cy} r={r*0.62} fill={pupilColor}/>
+        <circle cx={cx+r*0.28} cy={cy-r*0.28} r={r*0.22} fill="white"/>
+        <circle cx={cx-r*0.22} cy={cy+r*0.15} r={r*0.12} fill="white" opacity="0.7"/>
+        {/* droopy lid */}
+        <path d={`M${cx-r},${cy+1} Q${cx},${cy-r*0.5} ${cx+r},${cy+1}`} fill={pupilColor} opacity="0.35"/>
+      </g>
+    )
+  }
   return (
     <g>
-      <polygon points={`${cx-14},${y+10} ${cx-14},${y} ${cx-7},${y+6} ${cx},${y-4} ${cx+7},${y+6} ${cx+14},${y} ${cx+14},${y+10}`}
-        fill="#FFD700" stroke="#FFA000" strokeWidth="1"/>
-      <circle cx={cx} cy={y-4} r="2.5" fill="#FF4081"/>
-      <circle cx={cx-7} cy={y+5} r="2" fill="#40C4FF"/>
-      <circle cx={cx+7} cy={y+5} r="2" fill="#69F0AE"/>
+      <circle cx={cx} cy={cy} r={r} fill={irisColor} opacity="0.95"/>
+      <circle cx={cx} cy={cy+r*0.1} r={r*0.6} fill={pupilColor}/>
+      <circle cx={cx+r*0.3} cy={cy-r*0.3} r={r*0.24} fill="white"/>
+      <circle cx={cx-r*0.25} cy={cy+r*0.2} r={r*0.13} fill="white" opacity="0.75"/>
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="white" strokeWidth="0.8" opacity="0.15"/>
     </g>
   )
 }
 
-function Glow({ cx=60, cy=70, r=52, color='#FFD700' }) {
+function Cheeks({ lx, rx, y }) {
   return (
-    <radialGradient id="glow-grad" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stopColor={color} stopOpacity="0.35"/>
-      <stop offset="100%" stopColor={color} stopOpacity="0"/>
-    </radialGradient>
+    <>
+      <ellipse cx={lx} cy={y} rx="9" ry="5.5" fill="#FFB3C8" opacity="0.6"/>
+      <ellipse cx={rx} cy={y} rx="9" ry="5.5" fill="#FFB3C8" opacity="0.6"/>
+    </>
   )
 }
+
+function CuteMouth({ mood, cx, y }) {
+  if (mood === 'happy') return (
+    <g>
+      <path d={`M${cx-8},${y} Q${cx-2},${y+7} ${cx},${y+8} Q${cx+2},${y+7} ${cx+8},${y}`} stroke="#C0604A" strokeWidth="2" fill="none" strokeLinecap="round"/>
+    </g>
+  )
+  if (mood === 'sad') return <path d={`M${cx-7},${y+6} Q${cx},${y-1} ${cx+7},${y+6}`} stroke="#C0604A" strokeWidth="2" fill="none" strokeLinecap="round"/>
+  return <path d={`M${cx-6},${y+1} Q${cx},${y+6} ${cx+6},${y+1}`} stroke="#C0604A" strokeWidth="2" fill="none" strokeLinecap="round"/>
+}
+
+function Tears({ lx, rx, y }) {
+  return (
+    <>
+      <ellipse cx={lx} cy={y+12} rx="2.5" ry="5" fill="#90CAF9" opacity="0.9"/>
+      <ellipse cx={rx} cy={y+15} rx="2" ry="4" fill="#90CAF9" opacity="0.7"/>
+    </>
+  )
+}
+
+function Crown({ cx, y }) {
+  return (
+    <g>
+      <polygon points={`${cx-16},${y} ${cx-8},${y-16} ${cx},${y-8} ${cx+8},${y-16} ${cx+16},${y} `} fill="#FFD700" stroke="#FFA000" strokeWidth="1.2"/>
+      <circle cx={cx} cy={y-8} r="3.5" fill="#FF4081"/>
+      <circle cx={cx-9} cy={y-1} r="2.5" fill="#40C4FF"/>
+      <circle cx={cx+9} cy={y-1} r="2.5" fill="#69F0AE"/>
+    </g>
+  )
+}
+
 function CatSVG({ stage, mood, p }) {
   const isBaby = stage === 'baby'
   const isEvolved = stage === 'evolved'
-  const hr = isBaby ? 38 : 32
-  const hcy = isBaby ? 60 : 54
-  const hcx = 60
+  const cx = 60, cy = stage === 'baby' ? 62 : 56
+  const hr = isBaby ? 30 : 26
+  const id = `cg${stage}`
   return (
     <g>
-      {isEvolved && (
-        <>
-          <defs><radialGradient id="cg" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor={p.s} stopOpacity="0.4"/>
-            <stop offset="100%" stopColor={p.s} stopOpacity="0"/>
-          </radialGradient></defs>
-          <ellipse cx={hcx} cy={hcy+12} rx="54" ry="46" fill="url(#cg)"/>
-        </>
+      <defs>
+        <radialGradient id={`cb${stage}`} cx="40%" cy="35%" r="65%">
+          <stop offset="0%" stopColor={p.h}/>
+          <stop offset="100%" stopColor={p.b}/>
+        </radialGradient>
+        {isEvolved && <radialGradient id={id} cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor={p.s} stopOpacity="0.45"/>
+          <stop offset="100%" stopColor={p.s} stopOpacity="0"/>
+        </radialGradient>}
+      </defs>
+      {isEvolved && <ellipse cx={cx} cy={cy+14} rx="58" ry="50" fill={`url(#${id})`}/>}
+      {/* Shadow */}
+      <ellipse cx={cx} cy={cy+hr+18} rx={isBaby?18:28} ry={isBaby?5:8} fill="#0002"/>
+      {/* Body */}
+      {!isBaby && (
+        <g>
+          <ellipse cx={cx} cy={cy+hr+8} rx="24" ry="20" fill={`url(#cb${stage})`}/>
+          <ellipse cx={cx} cy={cy+hr+2} rx="25" ry="8" fill={p.s} opacity="0.7"/>
+          {/* tail */}
+          <path d={`M${cx+20},${cy+hr+14} Q${cx+44},${cy+hr+28} ${cx+36},${cy+hr+44}`} stroke={p.b} strokeWidth="8" fill="none" strokeLinecap="round"/>
+          <path d={`M${cx+20},${cy+hr+14} Q${cx+44},${cy+hr+28} ${cx+36},${cy+hr+44}`} stroke={p.h} strokeWidth="4" fill="none" strokeLinecap="round"/>
+        </g>
       )}
-      {isBaby
-        ? <ellipse cx={hcx} cy={hcy+hr+5} rx="14" ry="9" fill={p.b}/>
-        : <ellipse cx={hcx} cy={hcy+hr+10} rx="22" ry="16" fill={p.b}/>
-      }
-      {!isBaby && <ellipse cx={hcx} cy={hcy+hr+1} rx="24" ry="7" fill={p.s} opacity="0.85"/>}
-      <circle cx={hcx} cy={hcy} r={hr} fill={p.b}/>
-      <polygon points={`${hcx-23},${hcy-26} ${hcx-8},${hcy-hr-12} ${hcx-4},${hcy-22}`} fill={p.b}/>
-      <polygon points={`${hcx+4},${hcy-22} ${hcx+8},${hcy-hr-12} ${hcx+23},${hcy-26}`} fill={p.b}/>
-      <polygon points={`${hcx-20},${hcy-24} ${hcx-9},${hcy-hr-6} ${hcx-5},${hcy-23}`} fill={p.i}/>
-      <polygon points={`${hcx+5},${hcy-23} ${hcx+9},${hcy-hr-6} ${hcx+20},${hcy-24}`} fill={p.i}/>
-      <ellipse cx={hcx} cy={hcy+4} rx={hr*0.58} ry={hr*0.48} fill={p.h} opacity="0.45"/>
-      <Eyes mood={mood} lx={hcx-13} rx={hcx+13} y={hcy+2} c={p.e}/>
-      {mood!=='sad' && <Blush lx={hcx-22} rx={hcx+22} y={hcy+14}/>}
-      {mood==='sad' && <Tear x={hcx-13} y={hcy+2}/>}
-      <ellipse cx={hcx} cy={hcy+14} rx="4" ry="3" fill={p.i}/>
-      <Mouth mood={mood} cx={hcx} y={hcy+22}/>
-      <line x1={hcx-8} y1={hcy+13} x2={hcx-28} y2={hcy+10} stroke={p.e} strokeWidth="1.2" opacity="0.55"/>
-      <line x1={hcx-8} y1={hcy+16} x2={hcx-28} y2={hcy+17} stroke={p.e} strokeWidth="1.2" opacity="0.55"/>
-      <line x1={hcx+8} y1={hcy+13} x2={hcx+28} y2={hcy+10} stroke={p.e} strokeWidth="1.2" opacity="0.55"/>
-      <line x1={hcx+8} y1={hcy+16} x2={hcx+28} y2={hcy+17} stroke={p.e} strokeWidth="1.2" opacity="0.55"/>
-      {isBaby && <path d={`M${hcx+12},${hcy+hr+8} Q${hcx+34},${hcy+hr+18} ${hcx+26},${hcy+hr+32}`} stroke={p.b} strokeWidth="6" fill="none" strokeLinecap="round"/>}
-      {isEvolved && <Crown cx={hcx} y={hcy-hr+2}/>}
+      {isBaby && <ellipse cx={cx} cy={cy+hr+6} rx="14" ry="10" fill={`url(#cb${stage})`}/>}
+      {/* Ears */}
+      <polygon points={`${cx-24},${cy-22} ${cx-10},${cy-hr-14} ${cx-5},${cy-20}`} fill={p.b}/>
+      <polygon points={`${cx+5},${cy-20} ${cx+10},${cy-hr-14} ${cx+24},${cy-22}`} fill={p.b}/>
+      <polygon points={`${cx-21},${cy-21} ${cx-11},${cy-hr-7} ${cx-6},${cy-21}`} fill={p.i}/>
+      <polygon points={`${cx+6},${cy-21} ${cx+11},${cy-hr-7} ${cx+21},${cy-21}`} fill={p.i}/>
+      {/* Head */}
+      <circle cx={cx} cy={cy} r={hr} fill={`url(#cb${stage})`}/>
+      {/* Face highlight */}
+      <ellipse cx={cx-4} cy={cy-8} rx={hr*0.55} ry={hr*0.42} fill="white" opacity="0.12"/>
+      {/* Muzzle */}
+      <ellipse cx={cx} cy={cy+10} rx="12" ry="9" fill={p.h} opacity="0.8"/>
+      <ellipse cx={cx} cy={cy+9} rx="5" ry="3.5" fill={p.i} opacity="0.9"/>
+      {/* Eyes */}
+      <BigEye cx={cx-14} cy={cy-2} r={isBaby?9:8} irisColor={p.iris} pupilColor={p.e} mood={mood}/>
+      <BigEye cx={cx+14} cy={cy-2} r={isBaby?9:8} irisColor={p.iris} pupilColor={p.e} mood={mood} flip/>
+      {mood==='sad' && <Tears lx={cx-14} rx={cx+14} y={cy-2}/>}
+      {mood!=='sad' && <Cheeks lx={cx-22} rx={cx+22} y={cy+12}/>}
+      <CuteMouth mood={mood} cx={cx} y={cy+16}/>
+      {/* Whiskers */}
+      {[[-8,-28,-1],[-8,-28,3],[8,28,-1],[8,28,3]].map(([ox,tx,oy],i)=>(
+        <line key={i} x1={cx+ox} y1={cy+11+oy} x2={cx+tx} y2={cy+10+oy} stroke={p.e} strokeWidth="1" opacity="0.45"/>
+      ))}
+      {isBaby && <path d={`M${cx+12},${cy+hr+8} Q${cx+36},${cy+hr+20} ${cx+28},${cy+hr+36}`} stroke={p.b} strokeWidth="7" fill="none" strokeLinecap="round"/>}
+      {isEvolved && <Crown cx={cx} y={cy-hr}/>}
     </g>
   )
 }
-
 function DogSVG({ stage, mood, p }) {
   const isBaby = stage === 'baby'
   const isEvolved = stage === 'evolved'
-  const hr = isBaby ? 37 : 31
-  const hcy = isBaby ? 60 : 54
-  const hcx = 60
+  const cx = 60, cy = isBaby ? 62 : 56
+  const hr = isBaby ? 30 : 26
+  const id = `dg${stage}`
   return (
     <g>
-      {isEvolved && (
-        <>
-          <defs><radialGradient id="dg" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor={p.s} stopOpacity="0.4"/>
-            <stop offset="100%" stopColor={p.s} stopOpacity="0"/>
-          </radialGradient></defs>
-          <ellipse cx={hcx} cy={hcy+12} rx="54" ry="46" fill="url(#dg)"/>
-        </>
+      <defs>
+        <radialGradient id={`db${stage}`} cx="40%" cy="35%" r="65%">
+          <stop offset="0%" stopColor={p.h}/>
+          <stop offset="100%" stopColor={p.b}/>
+        </radialGradient>
+        {isEvolved && <radialGradient id={id} cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor={p.s} stopOpacity="0.45"/>
+          <stop offset="100%" stopColor={p.s} stopOpacity="0"/>
+        </radialGradient>}
+      </defs>
+      {isEvolved && <ellipse cx={cx} cy={cy+14} rx="58" ry="50" fill={`url(#${id})`}/>}
+      <ellipse cx={cx} cy={cy+hr+18} rx={isBaby?18:28} ry={isBaby?5:8} fill="#0002"/>
+      {!isBaby && (
+        <g>
+          <ellipse cx={cx} cy={cy+hr+8} rx="24" ry="20" fill={`url(#db${stage})`}/>
+          <ellipse cx={cx} cy={cy+hr+2} rx="25" ry="8" fill={p.s} opacity="0.7"/>
+          <path d={`M${cx-18},${cy+hr+12} Q${cx-42},${cy+hr+22} ${cx-34},${cy+hr+38}`} stroke={p.b} strokeWidth="8" fill="none" strokeLinecap="round"/>
+          <path d={`M${cx-18},${cy+hr+12} Q${cx-42},${cy+hr+22} ${cx-34},${cy+hr+38}`} stroke={p.h} strokeWidth="4" fill="none" strokeLinecap="round"/>
+        </g>
       )}
-      {isBaby
-        ? <ellipse cx={hcx} cy={hcy+hr+5} rx="13" ry="8" fill={p.b}/>
-        : <ellipse cx={hcx} cy={hcy+hr+10} rx="22" ry="16" fill={p.b}/>
-      }
-      {!isBaby && <ellipse cx={hcx} cy={hcy+hr+1} rx="24" ry="7" fill={p.s} opacity="0.85"/>}
-      <circle cx={hcx} cy={hcy} r={hr} fill={p.b}/>
+      {isBaby && <ellipse cx={cx} cy={cy+hr+6} rx="14" ry="10" fill={`url(#db${stage})`}/>}
       {/* Floppy ears */}
-      <ellipse cx={hcx-hr*0.75} cy={hcy+4} rx="10" ry="18" fill={p.h} transform={`rotate(-14,${hcx-hr*0.75},${hcy+4})`}/>
-      <ellipse cx={hcx+hr*0.75} cy={hcy+4} rx="10" ry="18" fill={p.h} transform={`rotate(14,${hcx+hr*0.75},${hcy+4})`}/>
-      <ellipse cx={hcx} cy={hcy+6} rx={hr*0.56} ry={hr*0.46} fill={p.h} opacity="0.45"/>
-      <Eyes mood={mood} lx={hcx-12} rx={hcx+12} y={hcy+2} c={p.e}/>
-      {mood!=='sad' && <Blush lx={hcx-21} rx={hcx+21} y={hcy+15}/>}
-      {mood==='sad' && <Tear x={hcx-12} y={hcy+2}/>}
-      <ellipse cx={hcx} cy={hcy+16} rx="10" ry="7" fill={p.i}/>
-      <ellipse cx={hcx} cy={hcy+15} rx="5" ry="4" fill={p.e} opacity="0.6"/>
-      <Mouth mood={mood} cx={hcx} y={hcy+24}/>
-      {isEvolved && <Crown cx={hcx} y={hcy-hr+2}/>}
+      <ellipse cx={cx-hr-2} cy={cy+4} rx="11" ry="18" fill={p.b} transform={`rotate(-18,${cx-hr-2},${cy+4})`}/>
+      <ellipse cx={cx-hr-2} cy={cy+4} rx="7" ry="13" fill={p.h} opacity="0.5" transform={`rotate(-18,${cx-hr-2},${cy+4})`}/>
+      <ellipse cx={cx+hr+2} cy={cy+4} rx="11" ry="18" fill={p.b} transform={`rotate(18,${cx+hr+2},${cy+4})`}/>
+      <ellipse cx={cx+hr+2} cy={cy+4} rx="7" ry="13" fill={p.h} opacity="0.5" transform={`rotate(18,${cx+hr+2},${cy+4})`}/>
+      <circle cx={cx} cy={cy} r={hr} fill={`url(#db${stage})`}/>
+      <ellipse cx={cx-4} cy={cy-8} rx={hr*0.55} ry={hr*0.42} fill="white" opacity="0.12"/>
+      {/* Snout */}
+      <ellipse cx={cx} cy={cy+12} rx="14" ry="11" fill={p.h} opacity="0.85"/>
+      <ellipse cx={cx} cy={cy+9} rx="7" ry="5" fill={p.i} opacity="0.8"/>
+      <ellipse cx={cx} cy={cy+8} rx="4" ry="2.5" fill={p.e} opacity="0.7"/>
+      <BigEye cx={cx-14} cy={cy-2} r={isBaby?9:8} irisColor={p.iris} pupilColor={p.e} mood={mood}/>
+      <BigEye cx={cx+14} cy={cy-2} r={isBaby?9:8} irisColor={p.iris} pupilColor={p.e} mood={mood} flip/>
+      {mood==='sad' && <Tears lx={cx-14} rx={cx+14} y={cy-2}/>}
+      {mood!=='sad' && <Cheeks lx={cx-22} rx={cx+22} y={cy+14}/>}
+      <CuteMouth mood={mood} cx={cx} y={cy+18}/>
+      {isBaby && <path d={`M${cx-12},${cy+hr+8} Q${cx-36},${cy+hr+18} ${cx-28},${cy+hr+32}`} stroke={p.b} strokeWidth="7" fill="none" strokeLinecap="round"/>}
+      {isEvolved && <Crown cx={cx} y={cy-hr}/>}
     </g>
   )
 }
 function RabbitSVG({ stage, mood, p }) {
   const isBaby = stage === 'baby'
   const isEvolved = stage === 'evolved'
-  const hr = isBaby ? 36 : 30
-  const hcy = isBaby ? 62 : 56
-  const hcx = 60
+  const cx = 60, cy = isBaby ? 62 : 56
+  const hr = isBaby ? 30 : 26
+  const id = `rg${stage}`
   return (
     <g>
-      {isEvolved && (
-        <>
-          <defs><radialGradient id="rg" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor={p.s} stopOpacity="0.4"/>
-            <stop offset="100%" stopColor={p.s} stopOpacity="0"/>
-          </radialGradient></defs>
-          <ellipse cx={hcx} cy={hcy+12} rx="54" ry="46" fill="url(#rg)"/>
-        </>
+      <defs>
+        <radialGradient id={`rb${stage}`} cx="40%" cy="35%" r="65%">
+          <stop offset="0%" stopColor={p.h}/>
+          <stop offset="100%" stopColor={p.b}/>
+        </radialGradient>
+        {isEvolved && <radialGradient id={id} cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor={p.s} stopOpacity="0.45"/>
+          <stop offset="100%" stopColor={p.s} stopOpacity="0"/>
+        </radialGradient>}
+      </defs>
+      {isEvolved && <ellipse cx={cx} cy={cy+14} rx="58" ry="50" fill={`url(#${id})`}/>}
+      <ellipse cx={cx} cy={cy+hr+18} rx={isBaby?18:28} ry={isBaby?5:8} fill="#0002"/>
+      {!isBaby && (
+        <g>
+          <ellipse cx={cx} cy={cy+hr+8} rx="24" ry="20" fill={`url(#rb${stage})`}/>
+          <ellipse cx={cx} cy={cy+hr+2} rx="25" ry="8" fill={p.s} opacity="0.6"/>
+          {/* fluffy tail */}
+          <circle cx={cx+22} cy={cy+hr+22} r="9" fill="white" opacity="0.9"/>
+          <circle cx={cx+22} cy={cy+hr+22} r="6" fill={p.h}/>
+        </g>
       )}
+      {isBaby && <ellipse cx={cx} cy={cy+hr+6} rx="14" ry="10" fill={`url(#rb${stage})`}/>}
       {/* Long ears */}
-      <ellipse cx={hcx-14} cy={hcy-hr-10} rx="8" ry="20" fill={p.b}/>
-      <ellipse cx={hcx+14} cy={hcy-hr-10} rx="8" ry="20" fill={p.b}/>
-      <ellipse cx={hcx-14} cy={hcy-hr-10} rx="4" ry="15" fill={p.i}/>
-      <ellipse cx={hcx+14} cy={hcy-hr-10} rx="4" ry="15" fill={p.i}/>
-      {isBaby
-        ? <ellipse cx={hcx} cy={hcy+hr+5} rx="12" ry="8" fill={p.b}/>
-        : <ellipse cx={hcx} cy={hcy+hr+10} rx="20" ry="14" fill={p.b}/>
-      }
-      {!isBaby && <ellipse cx={hcx} cy={hcy+hr} rx="22" ry="7" fill={p.s} opacity="0.85"/>}
-      <circle cx={hcx} cy={hcy} r={hr} fill={p.b}/>
-      <ellipse cx={hcx} cy={hcy+6} rx={hr*0.55} ry={hr*0.44} fill={p.h} opacity="0.35"/>
-      <Eyes mood={mood} lx={hcx-12} rx={hcx+12} y={hcy+1} c={p.e}/>
-      {mood!=='sad' && <Blush lx={hcx-20} rx={hcx+20} y={hcy+13}/>}
-      {mood==='sad' && <Tear x={hcx-12} y={hcy+1}/>}
-      <ellipse cx={hcx} cy={hcy+13} rx="5" ry="4" fill={p.i}/>
-      <Mouth mood={mood} cx={hcx} y={hcy+21}/>
-      {isEvolved && <Crown cx={hcx} y={hcy-hr-16}/>}
+      <ellipse cx={cx-14} cy={cy-hr-18} rx="9" ry="22" fill={p.b}/>
+      <ellipse cx={cx-14} cy={cy-hr-18} rx="5.5" ry="17" fill={p.i} opacity="0.85"/>
+      <ellipse cx={cx+14} cy={cy-hr-18} rx="9" ry="22" fill={p.b}/>
+      <ellipse cx={cx+14} cy={cy-hr-18} rx="5.5" ry="17" fill={p.i} opacity="0.85"/>
+      <circle cx={cx} cy={cy} r={hr} fill={`url(#rb${stage})`}/>
+      <ellipse cx={cx-4} cy={cy-8} rx={hr*0.55} ry={hr*0.42} fill="white" opacity="0.15"/>
+      {/* Muzzle */}
+      <ellipse cx={cx} cy={cy+12} rx="11" ry="8" fill={p.h} opacity="0.7"/>
+      <ellipse cx={cx} cy={cy+10} rx="4" ry="3" fill={p.i} opacity="0.9"/>
+      <BigEye cx={cx-13} cy={cy-1} r={isBaby?9.5:8.5} irisColor={p.iris} pupilColor={p.e} mood={mood}/>
+      <BigEye cx={cx+13} cy={cy-1} r={isBaby?9.5:8.5} irisColor={p.iris} pupilColor={p.e} mood={mood} flip/>
+      {mood==='sad' && <Tears lx={cx-13} rx={cx+13} y={cy-1}/>}
+      {mood!=='sad' && <Cheeks lx={cx-21} rx={cx+21} y={cy+12}/>}
+      <CuteMouth mood={mood} cx={cx} y={cy+16}/>
+      {isBaby && <circle cx={cx+18} cy={cy+hr+10} r="6" fill="white" opacity="0.85"/>}
+      {isEvolved && <Crown cx={cx} y={cy-hr-4}/>}
     </g>
   )
 }
-
 function BearSVG({ stage, mood, p }) {
   const isBaby = stage === 'baby'
   const isEvolved = stage === 'evolved'
-  const hr = isBaby ? 38 : 32
-  const hcy = isBaby ? 60 : 54
-  const hcx = 60
+  const cx = 60, cy = isBaby ? 62 : 56
+  const hr = isBaby ? 31 : 27
+  const id = `brg${stage}`
   return (
     <g>
-      {isEvolved && (
-        <>
-          <defs><radialGradient id="brg" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor={p.s} stopOpacity="0.4"/>
-            <stop offset="100%" stopColor={p.s} stopOpacity="0"/>
-          </radialGradient></defs>
-          <ellipse cx={hcx} cy={hcy+12} rx="54" ry="46" fill="url(#brg)"/>
-        </>
+      <defs>
+        <radialGradient id={`brb${stage}`} cx="40%" cy="35%" r="65%">
+          <stop offset="0%" stopColor={p.h}/>
+          <stop offset="100%" stopColor={p.b}/>
+        </radialGradient>
+        {isEvolved && <radialGradient id={id} cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor={p.s} stopOpacity="0.45"/>
+          <stop offset="100%" stopColor={p.s} stopOpacity="0"/>
+        </radialGradient>}
+      </defs>
+      {isEvolved && <ellipse cx={cx} cy={cy+14} rx="58" ry="50" fill={`url(#${id})`}/>}
+      <ellipse cx={cx} cy={cy+hr+18} rx={isBaby?20:30} ry={isBaby?6:9} fill="#0002"/>
+      {!isBaby && (
+        <g>
+          <ellipse cx={cx} cy={cy+hr+10} rx="26" ry="22" fill={`url(#brb${stage})`}/>
+          <ellipse cx={cx} cy={cy+hr+3} rx="27" ry="9" fill={p.h} opacity="0.6"/>
+        </g>
       )}
-      {isBaby
-        ? <ellipse cx={hcx} cy={hcy+hr+5} rx="14" ry="9" fill={p.b}/>
-        : <ellipse cx={hcx} cy={hcy+hr+10} rx="24" ry="17" fill={p.b}/>
-      }
-      {!isBaby && <ellipse cx={hcx} cy={hcy+hr+1} rx="26" ry="8" fill={p.s} opacity="0.85"/>}
-      <circle cx={hcx} cy={hcy} r={hr} fill={p.b}/>
+      {isBaby && <ellipse cx={cx} cy={cy+hr+7} rx="16" ry="11" fill={`url(#brb${stage})`}/>}
       {/* Round ears */}
-      <circle cx={hcx-hr*0.72} cy={hcy-hr*0.72} r="11" fill={p.b}/>
-      <circle cx={hcx+hr*0.72} cy={hcy-hr*0.72} r="11" fill={p.b}/>
-      <circle cx={hcx-hr*0.72} cy={hcy-hr*0.72} r="6" fill={p.h}/>
-      <circle cx={hcx+hr*0.72} cy={hcy-hr*0.72} r="6" fill={p.h}/>
-      <ellipse cx={hcx} cy={hcy+8} rx={hr*0.52} ry={hr*0.44} fill={p.h} opacity="0.5"/>
-      <ellipse cx={hcx} cy={hcy+12} rx="13" ry="10" fill={p.i} opacity="0.7"/>
-      <Eyes mood={mood} lx={hcx-13} rx={hcx+13} y={hcy+1} c={p.e}/>
-      {mood!=='sad' && <Blush lx={hcx-22} rx={hcx+22} y={hcy+15}/>}
-      {mood==='sad' && <Tear x={hcx-13} y={hcy+1}/>}
-      <ellipse cx={hcx} cy={hcy+14} rx="6" ry="4.5" fill={p.e} opacity="0.55"/>
-      <Mouth mood={mood} cx={hcx} y={hcy+22}/>
-      {isEvolved && <Crown cx={hcx} y={hcy-hr+2}/>}
+      <circle cx={cx-hr+4} cy={cy-hr+6} r="13" fill={p.b}/>
+      <circle cx={cx-hr+4} cy={cy-hr+6} r="8" fill={p.i} opacity="0.7"/>
+      <circle cx={cx+hr-4} cy={cy-hr+6} r="13" fill={p.b}/>
+      <circle cx={cx+hr-4} cy={cy-hr+6} r="8" fill={p.i} opacity="0.7"/>
+      <circle cx={cx} cy={cy} r={hr} fill={`url(#brb${stage})`}/>
+      <ellipse cx={cx-4} cy={cy-8} rx={hr*0.55} ry={hr*0.42} fill="white" opacity="0.12"/>
+      {/* Muzzle */}
+      <ellipse cx={cx} cy={cy+13} rx="16" ry="12" fill={p.i} opacity="0.75"/>
+      <ellipse cx={cx} cy={cy+10} rx="6" ry="4" fill={p.h} opacity="0.6"/>
+      <ellipse cx={cx} cy={cy+9} rx="3.5" ry="2.2" fill={p.e} opacity="0.65"/>
+      <BigEye cx={cx-14} cy={cy-3} r={isBaby?9:8} irisColor={p.iris} pupilColor={p.e} mood={mood}/>
+      <BigEye cx={cx+14} cy={cy-3} r={isBaby?9:8} irisColor={p.iris} pupilColor={p.e} mood={mood} flip/>
+      {mood==='sad' && <Tears lx={cx-14} rx={cx+14} y={cy-3}/>}
+      {mood!=='sad' && <Cheeks lx={cx-23} rx={cx+23} y={cy+14}/>}
+      <CuteMouth mood={mood} cx={cx} y={cy+19}/>
+      {isEvolved && <Crown cx={cx} y={cy-hr}/>}
     </g>
   )
 }
 function BirdSVG({ stage, mood, p }) {
   const isBaby = stage === 'baby'
   const isEvolved = stage === 'evolved'
-  const hr = isBaby ? 34 : 28
-  const hcy = isBaby ? 60 : 54
-  const hcx = 60
+  const cx = 60, cy = isBaby ? 62 : 56
+  const hr = isBaby ? 28 : 24
+  const id = `big${stage}`
   return (
     <g>
-      {isEvolved && (
-        <>
-          <defs><radialGradient id="big" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor={p.s} stopOpacity="0.4"/>
-            <stop offset="100%" stopColor={p.s} stopOpacity="0"/>
-          </radialGradient></defs>
-          <ellipse cx={hcx} cy={hcy+12} rx="54" ry="46" fill="url(#big)"/>
-        </>
-      )}
-      {/* Body */}
-      {isBaby
-        ? <ellipse cx={hcx} cy={hcy+hr+6} rx="16" ry="12" fill={p.b}/>
-        : <ellipse cx={hcx} cy={hcy+hr+12} rx="24" ry="18" fill={p.b}/>
-      }
+      <defs>
+        <radialGradient id={`bib${stage}`} cx="40%" cy="35%" r="65%">
+          <stop offset="0%" stopColor={p.h}/>
+          <stop offset="100%" stopColor={p.b}/>
+        </radialGradient>
+        {isEvolved && <radialGradient id={id} cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor={p.s} stopOpacity="0.45"/>
+          <stop offset="100%" stopColor={p.s} stopOpacity="0"/>
+        </radialGradient>}
+      </defs>
+      {isEvolved && <ellipse cx={cx} cy={cy+14} rx="58" ry="50" fill={`url(#${id})`}/>}
+      <ellipse cx={cx} cy={cy+hr+16} rx={isBaby?16:26} ry={isBaby?5:8} fill="#0002"/>
       {!isBaby && (
-        <>
-          <ellipse cx={hcx-26} cy={hcy+hr+8} rx="10" ry="7" fill={p.b} transform={`rotate(-20,${hcx-26},${hcy+hr+8})`}/>
-          <ellipse cx={hcx+26} cy={hcy+hr+8} rx="10" ry="7" fill={p.b} transform={`rotate(20,${hcx+26},${hcy+hr+8})`}/>
-        </>
+        <g>
+          <ellipse cx={cx} cy={cy+hr+6} rx="22" ry="18" fill={`url(#bib${stage})`}/>
+          {/* Wings */}
+          <ellipse cx={cx-26} cy={cy+hr-2} rx="14" ry="9" fill={p.b} transform={`rotate(-20,${cx-26},${cy+hr-2})`}/>
+          <ellipse cx={cx+26} cy={cy+hr-2} rx="14" ry="9" fill={p.b} transform={`rotate(20,${cx+26},${cy+hr-2})`}/>
+          <ellipse cx={cx-26} cy={cy+hr-2} rx="10" ry="6" fill={p.h} opacity="0.5" transform={`rotate(-20,${cx-26},${cy+hr-2})`}/>
+          <ellipse cx={cx+26} cy={cy+hr-2} rx="10" ry="6" fill={p.h} opacity="0.5" transform={`rotate(20,${cx+26},${cy+hr-2})`}/>
+          {/* Tail feathers */}
+          <path d={`M${cx-8},${cy+hr+10} Q${cx-18},${cy+hr+30} ${cx-12},${cy+hr+42}`} stroke={p.b} strokeWidth="7" fill="none" strokeLinecap="round"/>
+          <path d={`M${cx},${cy+hr+10} Q${cx},${cy+hr+34} ${cx},${cy+hr+46}`} stroke={p.s} strokeWidth="6" fill="none" strokeLinecap="round"/>
+          <path d={`M${cx+8},${cy+hr+10} Q${cx+18},${cy+hr+30} ${cx+12},${cy+hr+42}`} stroke={p.b} strokeWidth="7" fill="none" strokeLinecap="round"/>
+        </g>
       )}
-      {/* Head */}
-      <circle cx={hcx} cy={hcy} r={hr} fill={p.b}/>
-      {/* Tuft */}
-      <ellipse cx={hcx} cy={hcy-hr+2} rx="7" ry="10" fill={p.h}/>
-      <ellipse cx={hcx} cy={hcy+4} rx={hr*0.5} ry={hr*0.4} fill={p.h} opacity="0.4"/>
-      <Eyes mood={mood} lx={hcx-11} rx={hcx+11} y={hcy} c={p.e}/>
-      {mood!=='sad' && <Blush lx={hcx-19} rx={hcx+19} y={hcy+11}/>}
-      {mood==='sad' && <Tear x={hcx-11} y={hcy}/>}
+      {isBaby && (
+        <g>
+          <ellipse cx={cx} cy={cy+hr+5} rx="12" ry="9" fill={`url(#bib${stage})`}/>
+          <ellipse cx={cx-18} cy={cy+hr} rx="10" ry="6" fill={p.b} transform={`rotate(-15,${cx-18},${cy+hr})`}/>
+          <ellipse cx={cx+18} cy={cy+hr} rx="10" ry="6" fill={p.b} transform={`rotate(15,${cx+18},${cy+hr})`}/>
+        </g>
+      )}
+      {/* Crest */}
+      <path d={`M${cx-6},${cy-hr+4} Q${cx-2},${cy-hr-16} ${cx+2},${cy-hr+4}`} stroke={p.s} strokeWidth="5" fill="none" strokeLinecap="round"/>
+      <circle cx={cx} cy={cy-hr-12} r="5" fill={p.s}/>
+      <circle cx={cx} cy={cy} r={hr} fill={`url(#bib${stage})`}/>
+      <ellipse cx={cx-4} cy={cy-8} rx={hr*0.55} ry={hr*0.42} fill="white" opacity="0.15"/>
       {/* Beak */}
-      <polygon points={`${hcx-6},${hcy+12} ${hcx+6},${hcy+12} ${hcx},${hcy+20}`} fill={p.i}/>
-      {isEvolved && <Crown cx={hcx} y={hcy-hr+2}/>}
+      <polygon points={`${cx-7},${cy+8} ${cx+7},${cy+8} ${cx},${cy+18}`} fill={p.i}/>
+      <line x1={cx-7} y1={cy+8} x2={cx+7} y2={cy+8} stroke="#FFA000" strokeWidth="1"/>
+      <BigEye cx={cx-13} cy={cy-2} r={isBaby?9:8} irisColor={p.iris} pupilColor={p.e} mood={mood}/>
+      <BigEye cx={cx+13} cy={cy-2} r={isBaby?9:8} irisColor={p.iris} pupilColor={p.e} mood={mood} flip/>
+      {mood==='sad' && <Tears lx={cx-13} rx={cx+13} y={cy-2}/>}
+      {mood!=='sad' && <Cheeks lx={cx-20} rx={cx+20} y={cy+4}/>}
+      {isEvolved && <Crown cx={cx} y={cy-hr-2}/>}
     </g>
   )
 }
-
 function DefaultSVG({ stage, mood, p }) {
   const isBaby = stage === 'baby'
   const isEvolved = stage === 'evolved'
-  const hr = isBaby ? 36 : 30
-  const hcy = isBaby ? 60 : 54
-  const hcx = 60
+  const cx = 60, cy = isBaby ? 62 : 56
+  const hr = isBaby ? 29 : 25
+  const id = `dfg${stage}`
   return (
     <g>
-      {isEvolved && (
-        <>
-          <defs><radialGradient id="defg" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor={p.s} stopOpacity="0.4"/>
-            <stop offset="100%" stopColor={p.s} stopOpacity="0"/>
-          </radialGradient></defs>
-          <ellipse cx={hcx} cy={hcy+12} rx="54" ry="46" fill="url(#defg)"/>
-        </>
+      <defs>
+        <radialGradient id={`dfb${stage}`} cx="40%" cy="35%" r="65%">
+          <stop offset="0%" stopColor={p.h}/>
+          <stop offset="100%" stopColor={p.b}/>
+        </radialGradient>
+        {isEvolved && <radialGradient id={id} cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor={p.s} stopOpacity="0.45"/>
+          <stop offset="100%" stopColor={p.s} stopOpacity="0"/>
+        </radialGradient>}
+      </defs>
+      {isEvolved && <ellipse cx={cx} cy={cy+14} rx="58" ry="50" fill={`url(#${id})`}/>}
+      <ellipse cx={cx} cy={cy+hr+18} rx={isBaby?18:28} ry={isBaby?5:8} fill="#0002"/>
+      {!isBaby && (
+        <g>
+          <ellipse cx={cx} cy={cy+hr+8} rx="24" ry="20" fill={`url(#dfb${stage})`}/>
+          <ellipse cx={cx} cy={cy+hr+2} rx="25" ry="8" fill={p.s} opacity="0.6"/>
+        </g>
       )}
-      {isBaby
-        ? <ellipse cx={hcx} cy={hcy+hr+5} rx="13" ry="8" fill={p.b}/>
-        : <ellipse cx={hcx} cy={hcy+hr+10} rx="22" ry="15" fill={p.b}/>
-      }
-      {!isBaby && <ellipse cx={hcx} cy={hcy+hr} rx="24" ry="7" fill={p.s} opacity="0.7"/>}
-      <circle cx={hcx} cy={hcy} r={hr} fill={p.b}/>
-      {/* Antenna */}
-      <line x1={hcx-8} y1={hcy-hr+4} x2={hcx-14} y2={hcy-hr-12} stroke={p.h} strokeWidth="2.5" strokeLinecap="round"/>
-      <circle cx={hcx-14} cy={hcy-hr-12} r="4" fill={p.s}/>
-      <line x1={hcx+8} y1={hcy-hr+4} x2={hcx+14} y2={hcy-hr-12} stroke={p.h} strokeWidth="2.5" strokeLinecap="round"/>
-      <circle cx={hcx+14} cy={hcy-hr-12} r="4" fill={p.i}/>
-      <ellipse cx={hcx} cy={hcy+6} rx={hr*0.55} ry={hr*0.44} fill={p.h} opacity="0.35"/>
-      <Eyes mood={mood} lx={hcx-12} rx={hcx+12} y={hcy+1} c={p.e}/>
-      {mood!=='sad' && <Blush lx={hcx-20} rx={hcx+20} y={hcy+13}/>}
-      {mood==='sad' && <Tear x={hcx-12} y={hcy+1}/>}
-      <Mouth mood={mood} cx={hcx} y={hcy+20}/>
-      {/* Spots */}
-      <circle cx={hcx-8} cy={hcy+28} r="3" fill={p.s} opacity="0.5"/>
-      <circle cx={hcx+8} cy={hcy+30} r="2.5" fill={p.i} opacity="0.5"/>
-      {isEvolved && <Crown cx={hcx} y={hcy-hr-10}/>}
+      {isBaby && <ellipse cx={cx} cy={cy+hr+6} rx="14" ry="10" fill={`url(#dfb${stage})`}/>}
+      {/* Antennae */}
+      <line x1={cx-8} y1={cy-hr+4} x2={cx-16} y2={cy-hr-14} stroke={p.h} strokeWidth="2.5" strokeLinecap="round"/>
+      <circle cx={cx-16} cy={cy-hr-14} r="5" fill={p.s}/>
+      <circle cx={cx-16} cy={cy-hr-14} r="2.5" fill="white" opacity="0.7"/>
+      <line x1={cx+8} y1={cy-hr+4} x2={cx+16} y2={cy-hr-14} stroke={p.h} strokeWidth="2.5" strokeLinecap="round"/>
+      <circle cx={cx+16} cy={cy-hr-14} r="5" fill={p.i}/>
+      <circle cx={cx+16} cy={cy-hr-14} r="2.5" fill="white" opacity="0.7"/>
+      <circle cx={cx} cy={cy} r={hr} fill={`url(#dfb${stage})`}/>
+      <ellipse cx={cx-4} cy={cy-8} rx={hr*0.55} ry={hr*0.42} fill="white" opacity="0.13"/>
+      <ellipse cx={cx} cy={cy+10} rx="10" ry="7.5" fill={p.h} opacity="0.7"/>
+      <BigEye cx={cx-13} cy={cy-2} r={isBaby?9:8} irisColor={p.iris} pupilColor={p.e} mood={mood}/>
+      <BigEye cx={cx+13} cy={cy-2} r={isBaby?9:8} irisColor={p.iris} pupilColor={p.e} mood={mood} flip/>
+      {mood==='sad' && <Tears lx={cx-13} rx={cx+13} y={cy-2}/>}
+      {mood!=='sad' && <Cheeks lx={cx-21} rx={cx+21} y={cy+12}/>}
+      <CuteMouth mood={mood} cx={cx} y={cy+16}/>
+      <circle cx={cx-8} cy={cy+26} r="3.5" fill={p.s} opacity="0.5"/>
+      <circle cx={cx+8} cy={cy+28} r="3" fill={p.i} opacity="0.5"/>
+      {isEvolved && <Crown cx={cx} y={cy-hr-8}/>}
     </g>
   )
 }
@@ -310,7 +397,7 @@ const SPECIES_MAP = {
   '🐶':'dog','🦊':'dog',
   '🐰':'rabbit','🐇':'rabbit',
   '🐻':'bear','🐼':'bear','🐨':'bear',
-  '🐧':'bird','🦜':'bird',
+  '🐧':'bird','🦜':'bird','🐦':'bird',
 }
 
 export function PetCharacter({ speciesIcon='', stage='baby', mood='neutral', size=120, animated=true }) {
@@ -319,20 +406,15 @@ export function PetCharacter({ speciesIcon='', stage='baby', mood='neutral', siz
   const props = { stage, mood, p }
   let idleClass = ''
   if (animated) {
-    if (mood === 'happy') idleClass = 'pet-float'
-    else if (mood === 'sad') idleClass = 'idle-sway'
-    else idleClass = 'idle-sway'
+    if (mood === 'happy') idleClass = 'pet-happy-bob'
+    else if (mood === 'sad') idleClass = 'pet-sad-sway'
+    else idleClass = 'pet-breathe'
   }
   const svgMap = { cat: CatSVG, dog: DogSVG, rabbit: RabbitSVG, bear: BearSVG, bird: BirdSVG, def: DefaultSVG }
   const Comp = svgMap[key]
   return (
-    <svg
-      viewBox="0 0 120 120"
-      width={size}
-      height={size}
-      className={idleClass}
-      style={{ display: 'block', overflow: 'visible' }}
-    >
+    <svg viewBox="0 0 120 120" width={size} height={size} className={idleClass}
+      style={{ display:'block', overflow:'visible', filter: mood==='happy' ? 'drop-shadow(0 0 6px rgba(255,215,0,0.5))' : mood==='sad' ? 'drop-shadow(0 0 4px rgba(100,150,255,0.4))' : 'none' }}>
       <Comp {...props}/>
     </svg>
   )
