@@ -4,53 +4,65 @@ import PetShop from './PetShop'
 import { PetCharacter } from './PetSVG'
 
 const CARE_ACTIONS = [
-  { id: 'feed',  label: '喂食', icon: '🍖', cost: 2, stat: 'hunger',      color: 'bg-orange-100 text-orange-700 border-orange-200', emoji: '❤️' },
-  { id: 'water', label: '喝水', icon: '💧', cost: 1, stat: 'thirst',      color: 'bg-blue-100 text-blue-700 border-blue-200',       emoji: '💧' },
-  { id: 'bath',  label: '洗澡', icon: '🛁', cost: 3, stat: 'cleanliness', color: 'bg-cyan-100 text-cyan-700 border-cyan-200',       emoji: '✨' },
-  { id: 'play',  label: '陪玩', icon: '🎾', cost: 2, stat: 'happiness',   color: 'bg-pink-100 text-pink-700 border-pink-200',       emoji: '🎉' },
+  { id: 'feed',  label: '喂食', icon: '🍖', cost: 2, stat: 'hunger',      emoji: '❤️',  stripe: '#FF6B35', glow: '#FF6B3566' },
+  { id: 'water', label: '喝水', icon: '💧', cost: 1, stat: 'thirst',      emoji: '💧',  stripe: '#4FC3F7', glow: '#4FC3F766' },
+  { id: 'bath',  label: '洗澡', icon: '🛁', cost: 3, stat: 'cleanliness', emoji: '✨',  stripe: '#26C6DA', glow: '#26C6DA66' },
+  { id: 'play',  label: '陪玩', icon: '🎾', cost: 2, stat: 'happiness',   emoji: '🎉',  stripe: '#EC407A', glow: '#EC407A66' },
 ]
 
 const STAT_META = {
-  hunger:      { label: '饱腹', icon: '🍖', color: 'bg-orange-400' },
-  thirst:      { label: '水分', icon: '💧', color: 'bg-blue-400' },
-  cleanliness: { label: '清洁', icon: '✨', color: 'bg-cyan-400' },
-  happiness:   { label: '心情', icon: '😊', color: 'bg-pink-400' },
+  hunger:      { label: '饱腹', icon: '🍖', grad: 'linear-gradient(90deg,#FF6B35,#FF4500)' },
+  thirst:      { label: '水分', icon: '💧', grad: 'linear-gradient(90deg,#4FC3F7,#7C4DFF)' },
+  cleanliness: { label: '清洁', icon: '✨', grad: 'linear-gradient(90deg,#26C6DA,#00BFA5)' },
+  happiness:   { label: '心情', icon: '😊', grad: 'linear-gradient(90deg,#EC407A,#FF80AB)' },
 }
 
 const ANIM_MAP = { feed: 'pet-bounce', water: 'head-shake', bath: 'pet-spin', play: 'play-jump' }
 const STATS = ['hunger', 'thirst', 'cleanliness', 'happiness']
 const CONFETTI_COLORS = ['#FF6B6B','#FFD93D','#6BCB77','#4D96FF','#FF6BFF','#FF9F43']
+const MOOD_GLOW = { happy: '#FFD700', neutral: '#7C4DFF', sad: '#607D8B' }
+
+const PARTICLES = Array.from({ length: 10 }, (_, i) => ({
+  id: i,
+  left: `${8 + Math.floor(i * 9.5)}%`,
+  size: 3 + (i % 3),
+  delay: `${(i * 0.4).toFixed(1)}s`,
+  dur: `${2.5 + (i % 3) * 0.7}s`,
+  color: ['#FFD700','#FF80AB','#80D8FF','#CCFF90','#FFD700'][i % 5],
+}))
 
 function getStage(level) {
   if ((level || 1) >= 11) return 'evolved'
   if ((level || 1) >= 6) return 'adult'
   return 'baby'
 }
-
 function getMood(pet) {
   const avg = STATS.reduce((s, k) => s + (pet[k] || 0), 0) / 4
-  if (avg > 65) return 'happy'
-  if (avg < 35) return 'sad'
-  return 'neutral'
+  return avg > 65 ? 'happy' : avg < 35 ? 'sad' : 'neutral'
+}
+function isDay() { const h = new Date().getHours(); return h >= 6 && h < 18 }
+function CornerDeco() {
+  return (
+    <>
+      {[['top-0 left-0','0 0'],['top-0 right-0','rotate(90,8,8)'],['bottom-0 left-0','rotate(-90,8,8)'],['bottom-0 right-0','rotate(180,8,8)']].map(([pos, t], i) => (
+        <svg key={i} className={`absolute ${pos} w-6 h-6`} viewBox="0 0 16 16">
+          <polygon points="0,0 14,0 0,14" fill="#FFD700" opacity="0.5" transform={t}/>
+        </svg>
+      ))}
+    </>
+  )
 }
 
-function isDay() {
-  const h = new Date().getHours()
-  return h >= 6 && h < 18
-}
 function SceneBackground({ day }) {
   if (day) return (
     <>
       <defs>
         <linearGradient id="sky-day" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#87CEEB"/>
-          <stop offset="100%" stopColor="#E0F4FF"/>
+          <stop offset="0%" stopColor="#87CEEB"/><stop offset="100%" stopColor="#E0F4FF"/>
         </linearGradient>
       </defs>
       <rect width="360" height="160" fill="url(#sky-day)"/>
-      {/* Sun */}
       <circle cx="300" cy="30" r="22" fill="#FFD700" opacity="0.9"/>
-      {/* Clouds */}
       <g className="cloud-drift">
         <ellipse cx="70" cy="38" rx="32" ry="18" fill="white" opacity="0.85"/>
         <ellipse cx="90" cy="30" rx="22" ry="14" fill="white" opacity="0.85"/>
@@ -61,7 +73,6 @@ function SceneBackground({ day }) {
         <ellipse cx="248" cy="47" rx="18" ry="12" fill="white" opacity="0.75"/>
         <ellipse cx="214" cy="51" rx="16" ry="11" fill="white" opacity="0.75"/>
       </g>
-      {/* Ground */}
       <rect x="0" y="140" width="360" height="20" fill="#7BC67E" rx="4"/>
       <ellipse cx="60" cy="140" rx="22" ry="8" fill="#6AB86E"/>
       <ellipse cx="300" cy="140" rx="18" ry="7" fill="#6AB86E"/>
@@ -71,33 +82,19 @@ function SceneBackground({ day }) {
     <>
       <defs>
         <linearGradient id="sky-night" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#0D1B4B"/>
-          <stop offset="100%" stopColor="#1A3A6B"/>
+          <stop offset="0%" stopColor="#0D1B4B"/><stop offset="100%" stopColor="#1A3A6B"/>
         </linearGradient>
       </defs>
       <rect width="360" height="160" fill="url(#sky-night)"/>
-      {/* Moon */}
       <circle cx="300" cy="34" r="18" fill="#FFF8DC" opacity="0.9"/>
       <circle cx="310" cy="28" r="14" fill="#1A3A6B"/>
-      {/* Stars */}
       {[[40,20],[80,35],[150,15],[200,28],[250,18],[130,40],[60,50],[320,50]].map(([x,y],i) => (
         <circle key={i} cx={x} cy={y} r="2" fill="white" className="star-twinkle" style={{animationDelay:`${i*0.3}s`}}/>
       ))}
-      {/* Ground */}
       <rect x="0" y="140" width="360" height="20" fill="#1B4D2E" rx="4"/>
       <ellipse cx="60" cy="140" rx="22" ry="8" fill="#163D24"/>
       <ellipse cx="300" cy="140" rx="18" ry="7" fill="#163D24"/>
     </>
-  )
-}
-
-function StatBar({ value }) {
-  const pct = Math.max(0, Math.min(100, value || 0))
-  const color = pct > 60 ? 'bg-green-400' : pct > 30 ? 'bg-yellow-400' : 'bg-red-400'
-  return (
-    <div className="flex-1 bg-gray-100 rounded-full h-2.5 overflow-hidden">
-      <div className={`h-full rounded-full transition-all duration-700 ${color}`} style={{ width: `${pct}%` }}/>
-    </div>
   )
 }
 
@@ -122,12 +119,8 @@ function Confetti() {
     <div className="absolute inset-0 pointer-events-none overflow-hidden z-30">
       {pieces.map((p, i) => (
         <div key={i} className="absolute rounded-sm"
-          style={{
-            left: `${p.x}%`, top: 0,
-            width: p.size, height: p.size,
-            background: p.color,
-            animation: `confetti-fall 1.2s ease-out ${p.delay}s forwards`,
-          }}/>
+          style={{ left:`${p.x}%`, top:0, width:p.size, height:p.size,
+            background:p.color, animation:`confetti-fall 1.2s ease-out ${p.delay}s forwards` }}/>
       ))}
     </div>
   )
@@ -136,12 +129,9 @@ function Confetti() {
 function EvolveBeam({ color='#9C27B0' }) {
   return (
     <div className="absolute inset-0 flex justify-center items-end pointer-events-none z-20 overflow-hidden">
-      <div style={{
-        width: 48, height: '100%',
-        background: `linear-gradient(to top, ${color}CC, transparent)`,
-        transformOrigin: 'bottom',
-        animation: 'evolve-beam 0.9s ease-out forwards',
-      }}/>
+      <div style={{ width:48, height:'100%',
+        background:`linear-gradient(to top, ${color}CC, transparent)`,
+        transformOrigin:'bottom', animation:'evolve-beam 0.9s ease-out forwards' }}/>
     </div>
   )
 }
@@ -149,46 +139,35 @@ function EvolveBeam({ color='#9C27B0' }) {
 function GoldenFlash() {
   return (
     <div className="golden-flash absolute inset-0 pointer-events-none z-20 rounded-3xl"
-      style={{ background: 'radial-gradient(ellipse at center, #FFD700CC 0%, transparent 70%)' }}/>
+      style={{ background:'radial-gradient(ellipse at center, #FFD700CC 0%, transparent 70%)' }}/>
   )
 }
-function PetCard({ pet, species, childId, points }) {
+function PetCard({ pet, species, childId }) {
   const { petCare, usePetItem, removePet, petRedemptions } = useStore()
   const [acting, setActing] = useState(null)
   const [petAnim, setPetAnim] = useState('pet-float')
   const [floatingEmojis, setFloatingEmojis] = useState([])
   const [levelUp, setLevelUp] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const [evolveEffect, setEvolveEffect] = useState(null) // 'beam'|'golden'
+  const [evolveEffect, setEvolveEffect] = useState(null)
   const [showEvolveAppear, setShowEvolveAppear] = useState(false)
   const emojiRef = useRef(0)
   const day = isDay()
-
   const mood = getMood(pet)
   const stage = getStage(pet.level)
   const speciesIcon = species?.icon || ''
-
-  const health = Math.round(
-    STATS.reduce((s, k) => s + (pet[k] || 0), 0) / 4
-  )
   const expInLevel = (pet.exp || 0) % 100
-  const expToNext = 100
-
-  const myItems = (petRedemptions || []).filter(
-    (r) => r.child_id === childId && !r.used
-  )
+  const myItems = (petRedemptions || []).filter(r => r.child_id === childId && !r.used)
 
   const triggerAnim = (cls) => {
     setPetAnim(cls)
     setTimeout(() => setPetAnim(mood === 'happy' ? 'pet-float' : 'idle-sway'), 900)
   }
-
   const addEmoji = (emoji) => {
     const id = ++emojiRef.current
-    setFloatingEmojis((prev) => [...prev, { id, emoji }])
+    setFloatingEmojis(prev => [...prev, { id, emoji }])
   }
-
-  const removeEmoji = (id) => setFloatingEmojis((prev) => prev.filter((e) => e.id !== id))
+  const removeEmoji = (id) => setFloatingEmojis(prev => prev.filter(e => e.id !== id))
 
   const handleCare = async (action) => {
     if (acting) return
@@ -203,120 +182,141 @@ function PetCard({ pet, species, childId, points }) {
     const newLevel = Math.floor(((pet.exp || 0) + 10) / 100) + (pet.level || 1)
     const newStage = getStage(newLevel)
     if (newStage !== prevStage) {
-      if (newStage === 'adult') {
-        setEvolveEffect('beam')
-        setTimeout(() => { setEvolveEffect(null); setShowEvolveAppear(true) }, 1000)
-        setTimeout(() => setShowEvolveAppear(false), 1700)
-      } else if (newStage === 'evolved') {
-        setEvolveEffect('golden')
-        setTimeout(() => setEvolveEffect(null), 900)
-        setShowEvolveAppear(true)
-        setTimeout(() => setShowEvolveAppear(false), 1500)
-      }
+      setEvolveEffect(newStage === 'evolved' ? 'golden' : 'beam')
+      setTimeout(() => { setEvolveEffect(null); setShowEvolveAppear(true) }, 1000)
+      setTimeout(() => setShowEvolveAppear(false), 1700)
     } else if (newLevel > (pet.level || 1)) {
       setLevelUp(true)
       setTimeout(() => setLevelUp(false), 2200)
     }
     setActing(null)
   }
+  const stageInfo = stage === 'evolved'
+    ? { label: '👑 进化体', bg: 'linear-gradient(135deg,#FFD700,#FF8C00)', color: '#7B4F00' }
+    : stage === 'adult'
+    ? { label: '🌟 成长期', bg: 'linear-gradient(135deg,#9C27B0,#673AB7)', color: '#EDE7F6' }
+    : { label: '🌱 幼年期', bg: 'linear-gradient(135deg,#43A047,#1B5E20)', color: '#F1F8E9' }
+
   return (
-    <div className="rounded-3xl shadow-xl overflow-hidden mb-6 relative">
+    <div className="relative rounded-3xl mb-6 overflow-hidden"
+      style={{ background:'linear-gradient(160deg,#1A0A3C,#0D1B4B)', border:'2px solid #FFD70066', boxShadow:'0 0 24px #FFD70033, 0 8px 32px #0008' }}>
+      <CornerDeco/>
+
       {/* Scene */}
-      <div className="relative" style={{ height: 160 }}>
+      <div className="relative" style={{ height:160 }}>
         <svg viewBox="0 0 360 160" width="100%" height="160" preserveAspectRatio="xMidYMid slice" style={{ position:'absolute', inset:0 }}>
           <SceneBackground day={day}/>
         </svg>
-        {/* Pet character */}
+        {/* Mood glow behind pet */}
+        <div className="absolute" style={{ left:'50%', bottom:10, transform:'translateX(-50%)', width:110, height:60,
+          background:`radial-gradient(ellipse at center, ${MOOD_GLOW[mood]}55 0%, transparent 70%)`, zIndex:3 }}/>
+        {/* Particles */}
+        {PARTICLES.map(p => (
+          <div key={p.id} className="absolute rounded-full pointer-events-none"
+            style={{ left:p.left, bottom:`${20+p.id*4}%`, width:p.size, height:p.size,
+              background:p.color, opacity:0.7, zIndex:4,
+              animation:`particle-rise ${p.dur} ease-out ${p.delay} infinite` }}/>
+        ))}
+        {/* Pet */}
         <div className={`absolute left-1/2 -translate-x-1/2 ${showEvolveAppear ? 'evolve-appear' : ''}`}
-          style={{ bottom: 18, zIndex: 5 }}>
+          style={{ bottom:18, zIndex:5 }}>
           <div className={petAnim}>
             <PetCharacter speciesIcon={speciesIcon} stage={stage} mood={mood} size={112} animated={false}/>
           </div>
         </div>
-        {/* Floating emojis */}
-        {floatingEmojis.map((e) => (
-          <FloatingEmoji key={e.id} emoji={e.emoji} onDone={() => removeEmoji(e.id)}/>
-        ))}
-        {/* Evolve effects */}
-        {evolveEffect === 'beam' && <EvolveBeam color={stage === 'adult' ? '#9C27B0' : '#FFD700'}/>}
+        {floatingEmojis.map(e => <FloatingEmoji key={e.id} emoji={e.emoji} onDone={() => removeEmoji(e.id)}/>)}
+        {evolveEffect === 'beam' && <EvolveBeam color="#9C27B0"/>}
         {evolveEffect === 'golden' && <GoldenFlash/>}
-        {/* Level-up confetti */}
         {levelUp && <Confetti/>}
-        {/* Level-up text */}
         {levelUp && (
           <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
-            <div className="level-up-anim text-3xl font-black text-yellow-400 drop-shadow-lg">⭐ 升级啦！</div>
+            <div className="level-up-anim text-3xl font-black drop-shadow-lg" style={{ color:'#FFD700', textShadow:'0 0 16px #FFD700' }}>⭐ 升级啦！</div>
           </div>
         )}
         {/* Stage badge */}
         <div className="absolute top-2 left-3 z-10">
-          <span className={`text-xs font-bold px-2 py-0.5 rounded-full shadow ${
-            stage === 'evolved' ? 'bg-yellow-400 text-yellow-900' :
-            stage === 'adult'   ? 'bg-purple-200 text-purple-800' :
-                                  'bg-green-200 text-green-800'
-          }`}>{stage === 'evolved' ? '✨进化体' : stage === 'adult' ? '🌟成长期' : '🥚幼年期'}</span>
+          <span className="text-xs font-bold px-2 py-1 rounded-full shadow-lg" style={{ background:stageInfo.bg, color:stageInfo.color }}>{stageInfo.label}</span>
         </div>
-        {/* Delete btn */}
+        {/* Delete */}
         <button onClick={() => setConfirmDelete(true)}
-          className="absolute top-2 right-2 z-10 bg-white/70 rounded-full w-7 h-7 flex items-center justify-center text-red-400 text-sm shadow">
-          🗑
-        </button>
+          className="absolute top-2 right-2 z-10 rounded-full w-7 h-7 flex items-center justify-center text-sm"
+          style={{ background:'rgba(0,0,0,0.4)', color:'#FF8A80', border:'1px solid #FF8A8066' }}>🗑</button>
       </div>
-
       {/* Info panel */}
-      <div className={`p-4 ${day ? 'bg-sky-50' : 'bg-indigo-950 text-white'}`}>
+      <div className="px-4 pt-3 pb-2">
         {/* Name + level */}
-        <div className="flex items-center gap-2 mb-2">
-          <span className="font-black text-lg">{pet.name || species?.name}</span>
-          <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${
-            day ? 'bg-white text-gray-700 shadow-sm' : 'bg-white/20 text-white'
-          }`}>Lv.{pet.level || 1}</span>
-          <span className="text-base">{mood === 'happy' ? '😄' : mood === 'sad' ? '😢' : '😐'}</span>
-        </div>
-        {/* Exp bar */}
-        <div className="flex items-center gap-2 mb-3">
-          <span className={`text-xs ${day ? 'text-gray-500' : 'text-white/60'}`}>经验</span>
-          <div className="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
-            <div className="h-full rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 transition-all duration-700"
-              style={{ width: `${expInLevel}%` }}/>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-xl font-black truncate"
+            style={{ color:'#FFD700', textShadow:'0 0 10px #FFD700, 0 2px 0 #7B4F00' }}>
+            {speciesIcon} {pet.name}
+          </h3>
+          <div className="glow-pulse flex items-center gap-1 px-3 py-1 rounded-full text-sm font-black"
+            style={{ background:'linear-gradient(135deg,#FFD700,#FF8C00)', color:'#3E2000', minWidth:52, justifyContent:'center' }}>
+            Lv.{pet.level || 1}
           </div>
-          <span className={`text-xs font-mono ${day ? 'text-gray-500' : 'text-white/60'}`}>{expInLevel}/{expToNext}</span>
         </div>
-        {/* Stat bars */}
-        <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 mb-4">
-          {STATS.map((k) => (
-            <div key={k} className="flex items-center gap-1.5">
-              <span className="text-sm">{STAT_META[k].icon}</span>
-              <span className={`text-xs w-8 ${day ? 'text-gray-500' : 'text-white/70'}`}>{STAT_META[k].label}</span>
-              <StatBar value={pet[k]}/>
-              <span className={`text-xs w-6 text-right font-mono ${day ? 'text-gray-500' : 'text-white/70'}`}>{Math.round(pet[k] || 0)}</span>
-            </div>
-          ))}
+        {/* EXP bar */}
+        <div className="shimmer-bar rounded-full mb-3" style={{ height:10, background:'rgba(0,0,0,0.4)', border:'1px solid #FFD70044' }}>
+          <div className="h-full rounded-full" style={{ width:`${expInLevel}%`, background:'linear-gradient(90deg,#FFD700,#FF8C00)', transition:'width 0.6s ease' }}/>
         </div>
-        {/* Care buttons */}
-        <div className="grid grid-cols-4 gap-2 mb-4">
-          {CARE_ACTIONS.map((action) => (
-            <button key={action.id}
-              onClick={() => handleCare(action)}
-              disabled={!!acting}
-              className={`flex flex-col items-center gap-0.5 py-2 rounded-2xl border font-semibold text-xs transition-all active:scale-95 disabled:opacity-50 ${action.color}`}>
-              <span className="text-xl">{action.icon}</span>
-              {action.label}
-            </button>
-          ))}
+        {/* Stats HUD */}
+        <div className="rounded-2xl p-3 mb-3" style={{ background:'rgba(0,0,0,0.4)', backdropFilter:'blur(4px)' }}>
+          {STATS.map(k => {
+            const m = STAT_META[k]
+            const val = Math.round(pet[k] || 0)
+            const low = val < 30
+            return (
+              <div key={k} className="flex items-center gap-2 mb-1 last:mb-0">
+                <span className="text-base w-5 text-center">{m.icon}</span>
+                <span className="text-xs w-8" style={{ color: low ? '#FF5252' : '#B0BEC5', fontWeight: low ? 700 : 400 }}>
+                  {low ? '⚠' : ''}{val}
+                </span>
+                <div className="flex-1 rounded-full" style={{ height:8, background:'rgba(255,255,255,0.08)' }}>
+                  <div className="h-full rounded-full" style={{ width:`${val}%`, background:m.grad, transition:'width 0.5s ease' }}/>
+                </div>
+                <span className="text-xs w-10 text-right" style={{ color:'#B0BEC5' }}>{m.label}</span>
+              </div>
+            )
+          })}
+        </div>
+        {/* Care buttons — skill cards */}
+        <div className="grid grid-cols-2 gap-2 mb-3">
+          {CARE_ACTIONS.map(action => {
+            const isActing = acting === action.id
+            return (
+              <button key={action.id} disabled={!!acting}
+                onClick={() => handleCare(action)}
+                className="relative rounded-2xl overflow-hidden text-left active:scale-90 transition-transform"
+                style={{ background:'linear-gradient(160deg,#1e1e2e,#2a1a4e)', border:`1px solid ${action.glow}`, boxShadow: acting ? 'none' : `0 0 8px ${action.glow}` }}>
+                {/* top stripe */}
+                <div style={{ height:4, background:action.stripe }}/>
+                <div className="px-3 py-2">
+                  <div className="flex items-start justify-between">
+                    <span className="text-3xl">{action.icon}</span>
+                    <span className="text-xs font-bold px-2 py-0.5 rounded-full mt-1"
+                      style={{ background:action.glow, color:'#fff' }}>⭐{action.cost}</span>
+                  </div>
+                  <div className="text-sm font-bold mt-1" style={{ color: isActing ? '#888' : '#E0E0E0' }}>
+                    {isActing ? '⏳…' : action.label}
+                  </div>
+                </div>
+                {/* flash overlay on active */}
+                {isActing && <div className="absolute inset-0 rounded-2xl" style={{ background:'rgba(255,255,255,0.08)' }}/>}
+              </button>
+            )
+          })}
         </div>
         {/* Items */}
         {myItems.length > 0 && (
-          <div>
-            <p className={`text-xs mb-1.5 ${day ? 'text-gray-500' : 'text-white/60'}`}>🎒 背包道具</p>
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {myItems.map((r) => (
-                <button key={r.id}
-                  onClick={async () => { if (!acting) { setActing('item'); await usePetItem(r.id, pet.id, childId); setActing(null) } }}
-                  disabled={!!acting}
-                  className="flex-shrink-0 flex flex-col items-center gap-0.5 px-3 py-2 rounded-2xl bg-white/80 border border-gray-200 text-xs font-semibold disabled:opacity-50">
-                  <span className="text-xl">{r.icon || '🎁'}</span>
-                  <span className="text-gray-600">{r.name}</span>
+          <div className="overflow-x-auto pb-1">
+            <div className="flex gap-2">
+              {myItems.map(item => (
+                <button key={item.id}
+                  onClick={() => usePetItem(item.id, pet.id, childId)}
+                  className="flex-shrink-0 rounded-2xl px-3 py-2 text-center"
+                  style={{ background:'linear-gradient(160deg,#1e1e2e,#2a1a4e)', border:'1px solid #FFD70055', minWidth:64 }}>
+                  <div className="text-2xl">{item.icon}</div>
+                  <div className="text-xs mt-1" style={{ color:'#E0E0E0' }}>{item.name}</div>
                 </button>
               ))}
             </div>
@@ -324,17 +324,18 @@ function PetCard({ pet, species, childId, points }) {
         )}
       </div>
 
-      {/* Delete confirm */}
+      {/* Confirm delete modal */}
       {confirmDelete && (
-        <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-50 rounded-3xl">
-          <div className="bg-white rounded-2xl p-6 mx-6 shadow-2xl text-center">
-            <p className="text-lg font-bold text-gray-800 mb-1">删除宠物</p>
-            <p className="text-sm text-gray-500 mb-5">「{pet.name || species?.name}」将永远离开，确认吗？</p>
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-6">
+          <div className="rounded-3xl p-6 w-full max-w-xs text-center" style={{ background:'linear-gradient(160deg,#1A0A3C,#0D1B4B)', border:'2px solid #FF8A8066' }}>
+            <div className="text-4xl mb-3">🗑</div>
+            <h3 className="text-lg font-black mb-1" style={{ color:'#FFD700' }}>确认删除宠物？</h3>
+            <p className="text-sm mb-4" style={{ color:'#B0BEC5' }}>删除后无法恢复，积分不退还。</p>
             <div className="flex gap-3">
+              <button onClick={() => { removePet(pet.id); setConfirmDelete(false) }}
+                className="flex-1 py-2 rounded-2xl font-bold text-white" style={{ background:'#FF5252' }}>删除</button>
               <button onClick={() => setConfirmDelete(false)}
-                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-semibold">取消</button>
-              <button onClick={async () => { await removePet(pet.id); setConfirmDelete(false) }}
-                className="flex-1 py-2.5 rounded-xl bg-red-500 text-white font-semibold">确认删除</button>
+                className="flex-1 py-2 rounded-2xl font-bold" style={{ background:'rgba(255,255,255,0.1)', color:'#E0E0E0' }}>取消</button>
             </div>
           </div>
         </div>
@@ -343,63 +344,44 @@ function PetCard({ pet, species, childId, points }) {
   )
 }
 export default function PetHome({ childId }) {
-  const { ownedPets, petSpecies, children, loadPetData } = useStore()
-  const child = children.find((c) => c.id === childId)
-  const myPets = ownedPets.filter((p) => p.child_id === childId)
-  const [showShop, setShowShop] = useState(false)
-
-  useEffect(() => { loadPetData() }, [])
+  const { ownedPets, petSpecies, petRedemptions, petItems } = useStore()
+  const [tab, setTab] = useState('home')
+  const myPets = ownedPets.filter(p => p.child_id === childId)
 
   return (
-    <div className="pb-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-5">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl pet-float" style={{ display: 'inline-block' }}>🏡</span>
-          <h2 className="text-xl font-bold text-gray-800">我的宠物</h2>
-        </div>
-        <button
-          onClick={() => setShowShop(true)}
-          className="flex items-center gap-1 px-4 py-2 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-sm shadow-lg active:scale-95 transition-transform">
-          <span>🐾</span> 领养宠物
-        </button>
+    <div className="min-h-screen" style={{ background:'linear-gradient(160deg,#0D1B4B,#1A0A3C)' }}>
+      {/* Tab bar */}
+      <div className="flex gap-2 px-4 pt-4 pb-2">
+        {[['home','🏠 我的宠物'],['shop','🏪 领养中心']].map(([key,label]) => (
+          <button key={key} onClick={() => setTab(key)}
+            className="flex-1 py-2 rounded-2xl text-sm font-bold transition-all"
+            style={tab===key
+              ? { background:'linear-gradient(135deg,#FFD700,#FF8C00)', color:'#3E2000', boxShadow:'0 0 12px #FFD70066' }
+              : { background:'rgba(255,255,255,0.07)', color:'#B0BEC5' }}>
+            {label}
+          </button>
+        ))}
       </div>
 
-      {/* Empty state */}
-      {myPets.length === 0 && (
-        <div className="text-center py-16 text-gray-400">
-          <div className="text-6xl mb-4" style={{ animation: 'pet-float 3s ease-in-out infinite', display: 'inline-block' }}>🐣</div>
-          <p className="font-semibold text-gray-500 mb-1">还没有宠物</p>
-          <p className="text-sm">去领养一只吧！</p>
-        </div>
-      )}
-
-      {/* Pet cards */}
-      {myPets.map((pet) => {
-        const species = petSpecies.find((s) => s.id === pet.species_id)
-        return (
-          <PetCard
-            key={pet.id}
-            pet={pet}
-            species={species}
-            childId={childId}
-            points={child?.points || 0}
-          />
-        )
-      })}
-
-      {/* Adopt shop modal */}
-      {showShop && (
-        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50" onClick={() => setShowShop(false)}>
-          <div className="bg-white rounded-t-3xl p-6 w-full max-w-lg max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-800">🏪 宠物领养中心</h3>
-              <button onClick={() => setShowShop(false)} className="text-gray-400 text-2xl">✕</button>
-            </div>
-            <PetShop childId={childId} onBought={() => setShowShop(false)}/>
+      <div className="px-4 pb-8">
+        {tab === 'shop' ? (
+          <PetShop childId={childId} onBought={() => setTab('home')}/>
+        ) : myPets.length === 0 ? (
+          <div className="text-center py-20">
+            <div className="text-7xl mb-4">🐾</div>
+            <p className="text-xl font-bold mb-2" style={{ color:'#FFD700' }}>还没有宠物</p>
+            <p className="text-sm mb-6" style={{ color:'#B0BEC5' }}>去领养中心领养一只吧！</p>
+            <button onClick={() => setTab('shop')}
+              className="px-8 py-3 rounded-2xl font-bold text-lg"
+              style={{ background:'linear-gradient(135deg,#FFD700,#FF8C00)', color:'#3E2000' }}>去领养</button>
           </div>
-        </div>
-      )}
+        ) : (
+          myPets.map(pet => {
+            const species = petSpecies.find(s => s.id === pet.species_id)
+            return <PetCard key={pet.id} pet={pet} species={species} childId={childId}/>
+          })
+        )}
+      </div>
     </div>
   )
 }

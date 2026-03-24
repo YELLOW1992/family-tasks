@@ -27,52 +27,52 @@ export default function PetShop({ childId, onBought }) {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-5 pt-1">
         <span className="text-4xl">🏪</span>
         <div>
-          <h2 className="text-xl font-bold text-gray-800">宠物领养中心</h2>
-          <p className="text-sm text-gray-400">用积分领养一只属于你的宠物</p>
+          <h2 className="text-xl font-black" style={{ color:'#FFD700', textShadow:'0 0 8px #FFD70088' }}>宠物领养中心</h2>
+          <p className="text-sm" style={{ color:'#B0BEC5' }}>用积分领养一只属于你的宠物</p>
         </div>
       </div>
 
       {available.length === 0 && (
-        <div className="text-center py-16 text-gray-400">
+        <div className="text-center py-16" style={{ color:'#B0BEC5' }}>
           <div className="text-6xl mb-4">🐾</div>
           <p className="text-xl">暂无可领养的宠物</p>
         </div>
       )}
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
         {available.map((species) => {
           const owned = myPetSpeciesIds.includes(species.id)
           const canAfford = child && child.points >= species.cost
           return (
-            <div
-              key={species.id}
-              className={`bg-white rounded-3xl shadow p-5 flex items-center gap-4 ${
-                owned || !canAfford ? 'opacity-60' : ''
-              }`}
-            >
+            <div key={species.id} className="relative rounded-3xl overflow-hidden flex items-center gap-4 p-4"
+              style={{ background:'linear-gradient(160deg,#1e1e2e,#2a1a4e)', border:`2px solid ${owned ? '#4CAF5066' : canAfford ? '#FFD70055' : '#ffffff18'}`, opacity: !owned && !canAfford ? 0.6 : 1 }}>
+              {owned && (
+                <div className="absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-black"
+                  style={{ background:'linear-gradient(135deg,#4CAF50,#2E7D32)', color:'#fff' }}>✓ 已领养</div>
+              )}
               <div className="flex-shrink-0">
                 <PetCharacter speciesIcon={species.icon} stage="baby" mood="happy" size={64} animated={false}/>
               </div>
-              <div className="flex-1">
-                <p className="text-xl font-bold text-gray-800">{species.name}</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-lg font-black truncate" style={{ color:'#FFD700' }}>{species.name}</p>
                 {species.description && (
-                  <p className="text-gray-500 text-sm mb-1">{species.description}</p>
+                  <p className="text-xs mb-1 truncate" style={{ color:'#B0BEC5' }}>{species.description}</p>
                 )}
-                <span className="inline-block px-3 py-1 rounded-full text-sm font-semibold bg-indigo-100 text-indigo-700">
-                  ⭐ {species.cost} 积分
+                <span className="inline-block px-3 py-1 rounded-full text-sm font-bold"
+                  style={{ background:'linear-gradient(135deg,#FFD700,#FF8C00)', color:'#3E2000' }}>
+                  💰 {species.cost} 积分
                 </span>
               </div>
-              {owned ? (
-                <span className="px-4 py-2 rounded-2xl bg-green-100 text-green-700 font-bold text-sm">已领养</span>
-              ) : (
-                <button
-                  disabled={!canAfford}
+              {!owned && (
+                <button disabled={!canAfford}
                   onClick={() => { setNaming(species); setPetName('') }}
-                  className="px-5 py-3 rounded-2xl bg-pink-500 text-white font-bold text-base disabled:bg-gray-200 disabled:text-gray-400 active:bg-pink-600"
-                >
+                  className="flex-shrink-0 px-4 py-2 rounded-2xl font-bold text-sm active:scale-90 transition-transform"
+                  style={canAfford
+                    ? { background:'linear-gradient(135deg,#FF80AB,#EC407A)', color:'#fff', boxShadow:'0 0 10px #EC407A66' }
+                    : { background:'rgba(255,255,255,0.08)', color:'#607D8B' }}>
                   领养
                 </button>
               )}
@@ -83,34 +83,32 @@ export default function PetShop({ childId, onBought }) {
 
       {/* 命名弹窗 */}
       {naming && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
-          <div className="bg-white rounded-3xl p-6 w-full max-w-sm">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-6">
+          <div className="rounded-3xl p-6 w-full max-w-sm" style={{ background:'linear-gradient(160deg,#1A0A3C,#0D1B4B)', border:'2px solid #FFD70066', boxShadow:'0 0 32px #FFD70033' }}>
             <div className="text-center mb-4">
               <div className="flex justify-center mb-2">
                 <PetCharacter speciesIcon={naming.icon} stage="baby" mood="happy" size={80} animated={true}/>
               </div>
-              <h3 className="text-xl font-bold text-gray-800">给你的{naming.name}起个名字吧！</h3>
+              <h3 className="text-xl font-black" style={{ color:'#FFD700' }}>给你的{naming.name}起个名字吧！</h3>
             </div>
             <input
               value={petName}
               onChange={(e) => setPetName(e.target.value)}
               placeholder="宠物名字"
               maxLength={10}
-              className="w-full border-2 border-indigo-200 rounded-2xl px-4 py-3 text-lg text-center mb-4 focus:outline-none focus:border-indigo-400"
+              className="w-full rounded-2xl px-4 py-3 text-lg text-center mb-4 focus:outline-none"
+              style={{ background:'rgba(255,255,255,0.08)', border:'2px solid #FFD70066', color:'#FFD700' }}
               autoFocus
             />
             <div className="flex gap-3">
-              <button
-                onClick={handleBuy}
-                disabled={!petName.trim() || buying}
-                className="flex-1 py-3 rounded-2xl bg-pink-500 text-white font-bold text-lg disabled:opacity-40 active:bg-pink-600"
-              >
+              <button onClick={handleBuy} disabled={!petName.trim() || buying}
+                className="flex-1 py-3 rounded-2xl font-bold text-lg disabled:opacity-40 active:scale-95 transition-transform"
+                style={{ background:'linear-gradient(135deg,#FF80AB,#EC407A)', color:'#fff' }}>
                 {buying ? '领养中…' : '确认领养'}
               </button>
-              <button
-                onClick={() => setNaming(null)}
-                className="flex-1 py-3 rounded-2xl bg-gray-100 text-gray-700 font-bold text-lg"
-              >
+              <button onClick={() => setNaming(null)}
+                className="flex-1 py-3 rounded-2xl font-bold text-lg"
+                style={{ background:'rgba(255,255,255,0.08)', color:'#B0BEC5' }}>
                 取消
               </button>
             </div>
