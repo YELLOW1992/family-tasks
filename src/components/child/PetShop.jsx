@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import useStore from '../../store/useStore'
+import { PetCharacter } from './PetSVG'
 
 export default function PetShop({ childId, onBought }) {
   const { petSpecies, ownedPets, children, buyPet } = useStore()
@@ -52,7 +53,9 @@ export default function PetShop({ childId, onBought }) {
                 owned || !canAfford ? 'opacity-60' : ''
               }`}
             >
-              <div className="text-6xl">{species.icon}</div>
+              <div className="flex-shrink-0">
+                <PetCharacter speciesIcon={species.icon} stage="baby" mood="happy" size={64} animated={false}/>
+              </div>
               <div className="flex-1">
                 <p className="text-xl font-bold text-gray-800">{species.name}</p>
                 {species.description && (
@@ -83,7 +86,9 @@ export default function PetShop({ childId, onBought }) {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
           <div className="bg-white rounded-3xl p-6 w-full max-w-sm">
             <div className="text-center mb-4">
-              <div className="text-7xl mb-2">{naming.icon}</div>
+              <div className="flex justify-center mb-2">
+                <PetCharacter speciesIcon={naming.icon} stage="baby" mood="happy" size={80} animated={true}/>
+              </div>
               <h3 className="text-xl font-bold text-gray-800">给你的{naming.name}起个名字吧！</h3>
             </div>
             <input
