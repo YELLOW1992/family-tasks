@@ -26,15 +26,21 @@ function mapRedemption(r) {
 
 async function loadAll() {
   const set = useStore.setState
-  const [config, children, tasks, rewards, redemptions, pointHistory] = await Promise.all([
+  const [config, children, tasks, rewards, redemptions, pointHistory, petSpecies, ownedPets, petItems, petRedemptions] = await Promise.all([
     supabase.from('config').select('*'),
     supabase.from('children').select('*'),
     supabase.from('tasks').select('*'),
     supabase.from('rewards').select('*'),
     supabase.from('redemptions').select('*'),
     supabase.from('point_history').select('*').order('created_at', { ascending: false }),
+    supabase.from('pet_species').select('*'),
+    supabase.from('owned_pets').select('*'),
+    supabase.from('pet_items').select('*'),
+    supabase.from('pet_redemptions').select('*'),
   ])
   const pin = config.data?.find((r) => r.key === 'pin')?.value ?? null
+  const petScheduleRow = config.data?.find((r) => r.key === 'pet_schedule')
+  const petSchedule = petScheduleRow ? JSON.parse(petScheduleRow.value) : null
   set({
     pin,
     children: children.data || [],
@@ -42,6 +48,11 @@ async function loadAll() {
     rewards: rewards.data || [],
     redemptions: (redemptions.data || []).map(mapRedemption),
     pointHistory: pointHistory.data || [],
+    petSpecies: petSpecies.data || [],
+    ownedPets: ownedPets.data || [],
+    petItems: petItems.data || [],
+    petRedemptions: petRedemptions.data || [],
+    petSchedule,
   })
 }
 
@@ -77,6 +88,22 @@ export async function startSupabaseSync() {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'redemptions' }, async () => {
       const { data } = await supabase.from('redemptions').select('*')
       set({ redemptions: (data || []).map(mapRedemption) })
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'pet_species' }, async () => {
+      const { data } = await supabase.from('pet_species').select('*')
+      set({ petSpecies: data || [] })
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'owned_pets' }, async () => {
+      const { data } = await supabase.from('owned_pets').select('*')
+      set({ ownedPets: data || [] })
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'pet_items' }, async () => {
+      const { data } = await supabase.from('pet_items').select('*')
+      set({ petItems: data || [] })
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'pet_redemptions' }, async () => {
+      const { data } = await supabase.from('pet_redemptions').select('*')
+      set({ petRedemptions: data || [] })
     })
     .subscribe()
 }
