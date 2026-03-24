@@ -199,7 +199,7 @@ function PetCard({ pet, species, childId }) {
 
   return (
     <div className="relative rounded-3xl mb-6 overflow-hidden"
-      style={{ background:'linear-gradient(160deg,#1A0A3C,#0D1B4B)', border:'2px solid #FFD70066', boxShadow:'0 0 24px #FFD70033, 0 8px 32px #0008' }}>
+      style={{ background:'#fff', border:'2px solid #FFD70088', boxShadow:'0 0 16px #FFD70022, 0 4px 16px #0001' }}>
       <CornerDeco/>
 
       {/* Scene */}
@@ -247,7 +247,7 @@ function PetCard({ pet, species, childId }) {
         {/* Name + level */}
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-xl font-black truncate"
-            style={{ color:'#FFD700', textShadow:'0 0 10px #FFD700, 0 2px 0 #7B4F00' }}>
+            style={{ color:'#E65100', textShadow:'none' }}>
             {speciesIcon} {pet.name}
           </h3>
           <div className="glow-pulse flex items-center gap-1 px-3 py-1 rounded-full text-sm font-black"
@@ -260,7 +260,7 @@ function PetCard({ pet, species, childId }) {
           <div className="h-full rounded-full" style={{ width:`${expInLevel}%`, background:'linear-gradient(90deg,#FFD700,#FF8C00)', transition:'width 0.6s ease' }}/>
         </div>
         {/* Stats HUD */}
-        <div className="rounded-2xl p-3 mb-3" style={{ background:'rgba(0,0,0,0.4)', backdropFilter:'blur(4px)' }}>
+        <div className="rounded-2xl p-3 mb-3" style={{ background:'rgba(0,0,0,0.05)', border:'1px solid rgba(0,0,0,0.07)' }}>
           {STATS.map(k => {
             const m = STAT_META[k]
             const val = Math.round(pet[k] || 0)
@@ -268,7 +268,7 @@ function PetCard({ pet, species, childId }) {
             return (
               <div key={k} className="flex items-center gap-2 mb-1 last:mb-0">
                 <span className="text-base w-5 text-center">{m.icon}</span>
-                <span className="text-xs w-8" style={{ color: low ? '#FF5252' : '#B0BEC5', fontWeight: low ? 700 : 400 }}>
+                <span className="text-xs w-8" style={{ color: low ? '#FF5252' : '#78909C', fontWeight: low ? 700 : 400 }}>
                   {low ? '⚠' : ''}{val}
                 </span>
                 <div className="flex-1 rounded-full" style={{ height:8, background:'rgba(255,255,255,0.08)' }}>
@@ -287,7 +287,7 @@ function PetCard({ pet, species, childId }) {
               <button key={action.id} disabled={!!acting}
                 onClick={() => handleCare(action)}
                 className="relative rounded-2xl overflow-hidden text-left active:scale-90 transition-transform"
-                style={{ background:'linear-gradient(160deg,#1e1e2e,#2a1a4e)', border:`1px solid ${action.glow}`, boxShadow: acting ? 'none' : `0 0 8px ${action.glow}` }}>
+                style={{ background:'#fff', border:`1.5px solid ${action.stripe}44`, boxShadow: acting ? 'none' : `0 2px 8px ${action.glow}` }}>
                 {/* top stripe */}
                 <div style={{ height:4, background:action.stripe }}/>
                 <div className="px-3 py-2">
@@ -296,7 +296,7 @@ function PetCard({ pet, species, childId }) {
                     <span className="text-xs font-bold px-2 py-0.5 rounded-full mt-1"
                       style={{ background:action.glow, color:'#fff' }}>⭐{action.cost}</span>
                   </div>
-                  <div className="text-sm font-bold mt-1" style={{ color: isActing ? '#888' : '#E0E0E0' }}>
+                  <div className="text-sm font-bold mt-1" style={{ color: isActing ? '#aaa' : '#424242' }}>
                     {isActing ? '⏳…' : action.label}
                   </div>
                 </div>
@@ -314,9 +314,9 @@ function PetCard({ pet, species, childId }) {
                 <button key={item.id}
                   onClick={() => usePetItem(item.id, pet.id, childId)}
                   className="flex-shrink-0 rounded-2xl px-3 py-2 text-center"
-                  style={{ background:'linear-gradient(160deg,#1e1e2e,#2a1a4e)', border:'1px solid #FFD70055', minWidth:64 }}>
+                  style={{ background:'#fff', border:'1.5px solid #FFD70088', minWidth:64, boxShadow:'0 2px 6px #FFD70022' }}>
                   <div className="text-2xl">{item.icon}</div>
-                  <div className="text-xs mt-1" style={{ color:'#E0E0E0' }}>{item.name}</div>
+                  <div className="text-xs mt-1" style={{ color:'#616161' }}>{item.name}</div>
                 </button>
               ))}
             </div>
@@ -327,15 +327,15 @@ function PetCard({ pet, species, childId }) {
       {/* Confirm delete modal */}
       {confirmDelete && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-6">
-          <div className="rounded-3xl p-6 w-full max-w-xs text-center" style={{ background:'linear-gradient(160deg,#1A0A3C,#0D1B4B)', border:'2px solid #FF8A8066' }}>
+          <div className="rounded-3xl p-6 w-full max-w-xs text-center" style={{ background:'#fff', border:'2px solid #FF8A8066', boxShadow:'0 4px 24px #0002' }}>
             <div className="text-4xl mb-3">🗑</div>
-            <h3 className="text-lg font-black mb-1" style={{ color:'#FFD700' }}>确认删除宠物？</h3>
-            <p className="text-sm mb-4" style={{ color:'#B0BEC5' }}>删除后无法恢复，积分不退还。</p>
+            <h3 className="text-lg font-black mb-1" style={{ color:'#E65100' }}>确认删除宠物？</h3>
+            <p className="text-sm mb-4" style={{ color:'#757575' }}>删除后无法恢复，积分不退还。</p>
             <div className="flex gap-3">
               <button onClick={() => { removePet(pet.id); setConfirmDelete(false) }}
                 className="flex-1 py-2 rounded-2xl font-bold text-white" style={{ background:'#FF5252' }}>删除</button>
               <button onClick={() => setConfirmDelete(false)}
-                className="flex-1 py-2 rounded-2xl font-bold" style={{ background:'rgba(255,255,255,0.1)', color:'#E0E0E0' }}>取消</button>
+                className="flex-1 py-2 rounded-2xl font-bold" style={{ background:'#F5F5F5', color:'#616161' }}>取消</button>
             </div>
           </div>
         </div>
@@ -349,7 +349,7 @@ export default function PetHome({ childId }) {
   const myPets = ownedPets.filter(p => p.child_id === childId)
 
   return (
-    <div className="min-h-screen" style={{ background:'linear-gradient(160deg,#0D1B4B,#1A0A3C)' }}>
+    <div className="min-h-screen" style={{ background:'linear-gradient(160deg,#F0F4FF,#FFF5FB)' }}>
       {/* Tab bar */}
       <div className="flex gap-2 px-4 pt-4 pb-2">
         {[['home','🏠 我的宠物'],['shop','🏪 领养中心']].map(([key,label]) => (
@@ -357,7 +357,7 @@ export default function PetHome({ childId }) {
             className="flex-1 py-2 rounded-2xl text-sm font-bold transition-all"
             style={tab===key
               ? { background:'linear-gradient(135deg,#FFD700,#FF8C00)', color:'#3E2000', boxShadow:'0 0 12px #FFD70066' }
-              : { background:'rgba(255,255,255,0.07)', color:'#B0BEC5' }}>
+              : { background:'rgba(0,0,0,0.07)', color:'#90A4AE' }}>
             {label}
           </button>
         ))}
@@ -369,8 +369,8 @@ export default function PetHome({ childId }) {
         ) : myPets.length === 0 ? (
           <div className="text-center py-20">
             <div className="text-7xl mb-4">🐾</div>
-            <p className="text-xl font-bold mb-2" style={{ color:'#FFD700' }}>还没有宠物</p>
-            <p className="text-sm mb-6" style={{ color:'#B0BEC5' }}>去领养中心领养一只吧！</p>
+            <p className="text-xl font-bold mb-2" style={{ color:'#E65100' }}>还没有宠物</p>
+            <p className="text-sm mb-6" style={{ color:'#90A4AE' }}>去领养中心领养一只吧！</p>
             <button onClick={() => setTab('shop')}
               className="px-8 py-3 rounded-2xl font-bold text-lg"
               style={{ background:'linear-gradient(135deg,#FFD700,#FF8C00)', color:'#3E2000' }}>去领养</button>
