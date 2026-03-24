@@ -85,7 +85,7 @@ export default function ChildDashboard({ child, onExit }) {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 pb-24">
+      <div className={`flex-1 overflow-y-auto pb-24 ${tab === 'pets' ? '' : 'p-6'}`}>
         {tab === 'tasks' && <TaskList childId={child.id} />}
         {tab === 'rewards' && <RewardShop childId={child.id} />}
         {tab === 'pets' && <PetHome childId={child.id} />}
