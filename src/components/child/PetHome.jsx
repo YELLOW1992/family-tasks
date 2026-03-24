@@ -256,7 +256,7 @@ function PetCard({ pet, species, childId }) {
           </div>
         </div>
         {/* EXP bar */}
-        <div className="shimmer-bar rounded-full mb-3" style={{ height:10, background:'rgba(0,0,0,0.4)', border:'1px solid #FFD70044' }}>
+        <div className="shimmer-bar rounded-full mb-3" style={{ height:10, background:'rgba(0,0,0,0.1)', border:'1px solid #FFD70066' }}>
           <div className="h-full rounded-full" style={{ width:`${expInLevel}%`, background:'linear-gradient(90deg,#FFD700,#FF8C00)', transition:'width 0.6s ease' }}/>
         </div>
         {/* Stats HUD */}
@@ -271,7 +271,7 @@ function PetCard({ pet, species, childId }) {
                 <span className="text-xs w-8" style={{ color: low ? '#FF5252' : '#78909C', fontWeight: low ? 700 : 400 }}>
                   {low ? '⚠' : ''}{val}
                 </span>
-                <div className="flex-1 rounded-full" style={{ height:8, background:'rgba(255,255,255,0.08)' }}>
+                <div className="flex-1 rounded-full" style={{ height:8, background:'rgba(0,0,0,0.08)' }}>
                   <div className="h-full rounded-full" style={{ width:`${val}%`, background:m.grad, transition:'width 0.5s ease' }}/>
                 </div>
                 <span className="text-xs w-10 text-right" style={{ color:'#B0BEC5' }}>{m.label}</span>
