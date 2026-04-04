@@ -225,3 +225,24 @@ body {
 .pet-breathe { animation: pet-breathe 3.5s ease-in-out infinite; }
 .pet-happy-bob { animation: pet-happy-bob 1.8s ease-in-out infinite; }
 .pet-sad-sway { animation: pet-sad-sway 3s ease-in-out infinite; }
+
+/* 新增皮卡丘动画 */
+@keyframes animate-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes animate-wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
+}
+
+@keyframes animate-spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-float { animation: animate-float 2s ease-in-out infinite; }
+.animate-wiggle { animation: animate-wiggle 0.5s ease-in-out; }
+.animate-spin-slow { animation: animate-spin-slow 2s linear; }
