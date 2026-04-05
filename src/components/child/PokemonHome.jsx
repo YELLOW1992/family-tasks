@@ -26,6 +26,7 @@ export default function PokemonHome({ childId }) {
   const [selectedPokemon, setSelectedPokemon] = useState(null)
   const [animation, setAnimation] = useState('idle') // idle, happy, eating, drinking, bathing, playing
   const [imageLoaded, setImageLoaded] = useState(false)
+  const [showInteractDrawer, setShowInteractDrawer] = useState(false)
 
   const ownedPets = useStore((s) => s.ownedPets)
   const petSpecies = useStore((s) => s.petSpecies)
@@ -162,7 +163,7 @@ export default function PokemonHome({ childId }) {
                   label="互动"
                   bgColor="bg-purple-500"
                   borderColor="border-purple-700"
-                  onClick={() => setCurrentView('interact')}
+                  onClick={() => setShowInteractDrawer(true)}
                 />
               </div>
             </div>
@@ -195,6 +196,80 @@ export default function PokemonHome({ childId }) {
 
         {animation === 'drinking' && (
           <div className="absolute top-1/3 left-1/2 -translate-x-1/2 text-6xl animate-bounce z-20">💧</div>
+        )}
+
+        {/* 互动抽屉 */}
+        {showInteractDrawer && (
+          <div
+            className="fixed inset-0 bg-black/50 z-30 transition-opacity duration-300"
+            onClick={() => setShowInteractDrawer(false)}
+          >
+            <div
+              className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 transform transition-transform duration-300 ease-out"
+              style={{ maxHeight: '70vh' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>
+              <h3 className="text-xl font-bold text-center mb-4">与 {selectedPokemon?.name} 互动</h3>
+
+              <div className="grid grid-cols-2 gap-3 overflow-y-auto" style={{ maxHeight: 'calc(70vh - 100px)' }}>
+                <InteractButton
+                  icon="🍎"
+                  label="喂食"
+                  description="+20 饱腹"
+                  onClick={() => {
+                    triggerAnimation('eating')
+                    setShowInteractDrawer(false)
+                  }}
+                />
+                <InteractButton
+                  icon="💧"
+                  label="喝水"
+                  description="+20 口渴"
+                  onClick={() => {
+                    triggerAnimation('drinking')
+                    setShowInteractDrawer(false)
+                  }}
+                />
+                <InteractButton
+                  icon="🛁"
+                  label="洗澡"
+                  description="+20 清洁"
+                  onClick={() => {
+                    triggerAnimation('bathing')
+                    setShowInteractDrawer(false)
+                  }}
+                />
+                <InteractButton
+                  icon="🎮"
+                  label="玩耍"
+                  description="+20 心情"
+                  onClick={() => {
+                    triggerAnimation('playing')
+                    setShowInteractDrawer(false)
+                  }}
+                />
+                <InteractButton
+                  icon="😊"
+                  label="抚摸"
+                  description="+10 心情"
+                  onClick={() => {
+                    triggerAnimation('happy')
+                    setShowInteractDrawer(false)
+                  }}
+                />
+                <InteractButton
+                  icon="😴"
+                  label="睡觉"
+                  description="恢复全部"
+                  onClick={() => {
+                    triggerAnimation('sleeping')
+                    setShowInteractDrawer(false)
+                  }}
+                />
+              </div>
+            </div>
+          </div>
         )}
 
         <style>{`
@@ -275,6 +350,20 @@ export default function PokemonHome({ childId }) {
       />
     )
   }
+}
+
+// 互动按钮组件
+function InteractButton({ icon, label, description, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex flex-col items-center justify-center p-4 bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl border-2 border-purple-300 active:scale-95 transition-transform shadow-md"
+    >
+      <div className="text-4xl mb-2">{icon}</div>
+      <div className="text-sm font-bold text-gray-800">{label}</div>
+      <div className="text-xs text-gray-600 mt-1">{description}</div>
+    </button>
+  )
 }
 
 // 状态条组件
