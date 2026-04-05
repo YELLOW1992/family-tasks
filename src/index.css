@@ -246,3 +246,45 @@ body {
 .animate-float { animation: animate-float 2s ease-in-out infinite; }
 .animate-wiggle { animation: animate-wiggle 0.5s ease-in-out; }
 .animate-spin-slow { animation: animate-spin-slow 2s linear; }
+
+/* 皮卡丘单张图片动画效果 */
+
+/* 坐着的皮卡丘 - 轻微呼吸和摇摆 */
+@keyframes pikachu-sitting {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.02) rotate(-1deg); }
+  50% { transform: scale(1.04) rotate(0deg); }
+  75% { transform: scale(1.02) rotate(1deg); }
+}
+
+/* 跳跃的皮卡丘 - 上下蹦跳 */
+@keyframes pikachu-jumping {
+  0%, 100% { transform: translateY(0px) scale(1, 1); }
+  25% { transform: translateY(-20px) scale(1.05, 0.95); }
+  50% { transform: translateY(-30px) scale(1, 1); }
+  75% { transform: translateY(-15px) scale(0.95, 1.05); }
+}
+
+/* 奔跑的皮卡丘 - 左右移动和倾斜 */
+@keyframes pikachu-running {
+  0%, 100% { transform: translateX(0px) rotate(0deg) scaleX(1); }
+  25% { transform: translateX(10px) rotate(-5deg) scaleX(1.05); }
+  50% { transform: translateX(0px) rotate(0deg) scaleX(1); }
+  75% { transform: translateX(-10px) rotate(5deg) scaleX(0.95); }
+}
+
+/* 躺着的皮卡丘 - 翻身和伸懒腰 */
+@keyframes pikachu-laying {
+  0%, 100% { transform: rotate(0deg) scaleX(1); }
+  20% { transform: rotate(-3deg) scaleX(1.05); }
+  40% { transform: rotate(3deg) scaleX(0.95); }
+  60% { transform: rotate(-2deg) scaleX(1.03); }
+  80% { transform: rotate(2deg) scaleX(0.97); }
+}
+
+.animate-pikachu-sitting { animation: pikachu-sitting 3s ease-in-out infinite; }
+.animate-pikachu-jumping { animation: pikachu-jumping 1s ease-in-out infinite; }
+.animate-pikachu-running { animation: pikachu-running 0.8s ease-in-out infinite; }
+.animate-pikachu-laying { animation: pikachu-laying 4s ease-in-out infinite; }
+
+

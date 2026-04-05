@@ -1,15 +1,31 @@
 import { useState, useEffect } from 'react'
 import useStore from '../../store/useStore'
-import PikachuSVG from './pokemon/PikachuSVG'
 import EvolutionView from './pokemon/EvolutionView'
 import PokemonSwitcher from './pokemon/PokemonSwitcher'
 import ItemShop from './pokemon/ItemShop'
 import InteractionPanel from './pokemon/InteractionPanel'
 
+// 获取宝可梦图片URL和动画类名
+const getPokemonImageUrl = (speciesName, animation = 'idle') => {
+  // 根据动画状态返回不同的皮卡丘姿势和对应的CSS动画类
+  const animationMap = {
+    'idle': { url: '/pikachu-2.png', class: 'animate-pikachu-sitting' },      // 坐着（默认）
+    'happy': { url: '/pikachu-3.png', class: 'animate-pikachu-jumping' },     // 跳跃（开心）
+    'playing': { url: '/pikachu-4.png', class: 'animate-pikachu-running' },   // 奔跑（玩耍）
+    'eating': { url: '/pikachu-2.png', class: 'animate-pikachu-sitting' },    // 坐着（吃东西）
+    'drinking': { url: '/pikachu-2.png', class: 'animate-pikachu-sitting' },  // 坐着（喝水）
+    'bathing': { url: '/pikachu-1.png', class: 'animate-pikachu-laying' },    // 躺着（洗澡）
+    'sleeping': { url: '/pikachu-1.png', class: 'animate-pikachu-laying' },   // 躺着（睡觉）
+  }
+
+  return animationMap[animation] || animationMap['idle']
+}
+
 export default function PokemonHome({ childId }) {
   const [currentView, setCurrentView] = useState('main') // main, evolution, switch, shop
   const [selectedPokemon, setSelectedPokemon] = useState(null)
   const [animation, setAnimation] = useState('idle') // idle, happy, eating, drinking, bathing, playing
+  const [imageLoaded, setImageLoaded] = useState(false)
 
   const ownedPets = useStore((s) => s.ownedPets)
   const petSpecies = useStore((s) => s.petSpecies)
@@ -26,6 +42,9 @@ export default function PokemonHome({ childId }) {
   }, [myPets, selectedPokemon])
 
   const currentSpecies = selectedPokemon ? petSpecies.find(s => s.id === selectedPokemon.species_id) : null
+  const imageData = getPokemonImageUrl(currentSpecies?.name || '皮卡丘', animation)
+  const imageUrl = imageData.url
+  const imageAnimClass = imageData.class
 
   // 触发动画
   const triggerAnimation = (animType) => {
@@ -38,93 +57,170 @@ export default function PokemonHome({ childId }) {
   // 主界面
   if (currentView === 'main') {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-sky-300 to-green-200 flex flex-col">
-        {/* 顶部信息栏 */}
-        <div className="bg-white/90 backdrop-blur p-4 shadow-lg">
-          <div className="flex justify-between items-center">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-800">{child.name} 的宝可梦</h2>
-              <p className="text-sm text-gray-600">积分: {child.points} 💰</p>
-            </div>
-            <button
-              onClick={() => window.history.back()}
-              className="px-4 py-2 bg-red-500 text-white rounded-lg"
-            >
-              返回
-            </button>
-          </div>
-        </div>
+      <div className="h-screen bg-gradient-to-b from-sky-400 via-green-300 to-green-400 flex flex-col relative overflow-hidden touch-none">
+        {/* 草地纹理背景 */}
+        <div className="absolute inset-0 opacity-30" style={{
+          backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,100,0,0.1) 2px, rgba(0,100,0,0.1) 4px),
+                           repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,100,0,0.1) 2px, rgba(0,100,0,0.1) 4px)`
+        }}></div>
 
-        {/* 宝可梦显示区域 */}
-        <div className="flex-1 flex items-center justify-center p-8">
-          {selectedPokemon ? (
-            <div className="text-center">
-              {/* 宝可梦名称和等级 */}
-              <div className="mb-4">
-                <h3 className="text-3xl font-bold text-gray-800">{selectedPokemon.name}</h3>
-                <p className="text-lg text-gray-600">Lv.{selectedPokemon.level}</p>
-                <div className="mt-2 bg-white/80 rounded-full px-4 py-1 inline-block">
-                  <span className="text-sm">EXP: {selectedPokemon.exp} / {selectedPokemon.level * 100}</span>
+        {/* 装饰性草丛 */}
+        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-green-600/40 to-transparent pointer-events-none"></div>
+
+        {selectedPokemon ? (
+          <div className="relative z-10 flex-1 flex items-start justify-center px-4 pt-2">
+            {/* 宝可梦显示区域 */}
+            <div className="flex items-start gap-3 max-w-4xl w-full">
+              {/* 左侧：宝可梦图片 */}
+              <div className="flex-1 flex flex-col items-center">
+                {/* 宝可梦图片 - 单张图片动画 */}
+                <div className="relative mt-8">
+                  {/* 底部阴影 */}
+                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-28 h-3 bg-black/20 rounded-full blur-lg"></div>
+
+                  {!imageLoaded && (
+                    <div className="w-40 h-40 flex items-center justify-center">
+                      <div className="text-6xl animate-bounce">⚡</div>
+                    </div>
+                  )}
+
+                  <img
+                    src={imageUrl}
+                    alt={selectedPokemon.name}
+                    onLoad={() => setImageLoaded(true)}
+                    onError={(e) => {
+                      console.error('Image load failed:', imageUrl)
+                      setImageLoaded(false)
+                    }}
+                    className={`w-40 h-40 object-contain drop-shadow-2xl transition-opacity duration-500 ${
+                      imageLoaded ? `opacity-100 ${imageAnimClass}` : 'opacity-0'
+                    }`}
+                    style={{
+                      filter: 'drop-shadow(0 12px 25px rgba(0,0,0,0.3))',
+                    }}
+                  />
+                </div>
+
+                {/* 等级和经验值条 */}
+                <div className="mt-8 w-full max-w-xs">
+                  <div className="flex justify-between items-center mb-0.5">
+                    <span className="text-[10px] font-bold text-white drop-shadow">Lv.{selectedPokemon.level} 经验值</span>
+                    <span className="text-[10px] font-mono font-bold text-white drop-shadow">{selectedPokemon.exp} / {selectedPokemon.level * 100}</span>
+                  </div>
+                  <div className="h-2 bg-white/50 rounded-full overflow-hidden border border-white/80">
+                    <div
+                      className="h-full bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 transition-all duration-500 relative"
+                      style={{ width: `${((selectedPokemon.exp || 0) % 100)}%` }}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-40 animate-shimmer"></div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 状态条 */}
+                <div className="mt-1.5 w-full max-w-xs bg-white/90 backdrop-blur rounded-lg p-2 shadow-lg">
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <StatBar label="饱腹" value={selectedPokemon.hunger} emoji="🍖" color="orange" />
+                    <StatBar label="口渴" value={selectedPokemon.thirst} emoji="💧" color="blue" />
+                    <StatBar label="清洁" value={selectedPokemon.cleanliness} emoji="✨" color="purple" />
+                    <StatBar label="心情" value={selectedPokemon.happiness} emoji="😊" color="pink" />
+                  </div>
                 </div>
               </div>
-
-              {/* 宝可梦形象 */}
-              <div className="relative">
-                {currentSpecies?.name === '皮卡丘' && (
-                  <PikachuSVG animation={animation} />
-                )}
-                {!currentSpecies && (
-                  <div className="text-6xl">❓</div>
-                )}
-              </div>
-
-              {/* 状态条 */}
-              <div className="mt-6 bg-white/90 rounded-2xl p-4 max-w-md mx-auto">
-                <StatBar label="饱腹" value={selectedPokemon.hunger} emoji="🍖" color="orange" />
-                <StatBar label="口渴" value={selectedPokemon.thirst} emoji="💧" color="blue" />
-                <StatBar label="清洁" value={selectedPokemon.cleanliness} emoji="✨" color="purple" />
-                <StatBar label="心情" value={selectedPokemon.happiness} emoji="😊" color="pink" />
+              {/* 右侧：功能按钮 */}
+              <div className="flex flex-col gap-1.5 pt-2">
+                <ActionButton
+                  icon="📊"
+                  label="属性"
+                  bgColor="bg-yellow-500"
+                  borderColor="border-yellow-700"
+                  onClick={() => {}}
+                />
+                <ActionButton
+                  icon="🎒"
+                  label="道具"
+                  bgColor="bg-green-500"
+                  borderColor="border-green-700"
+                  onClick={() => setCurrentView('shop')}
+                />
+                <ActionButton
+                  icon="🔄"
+                  label="切换"
+                  bgColor="bg-orange-500"
+                  borderColor="border-orange-700"
+                  onClick={() => setCurrentView('switch')}
+                />
+                <ActionButton
+                  icon="⚡"
+                  label="进化"
+                  bgColor="bg-red-500"
+                  borderColor="border-red-700"
+                  onClick={() => setCurrentView('evolution')}
+                />
+                <ActionButton
+                  icon="🎮"
+                  label="互动"
+                  bgColor="bg-purple-500"
+                  borderColor="border-purple-700"
+                  onClick={() => setCurrentView('interact')}
+                />
               </div>
             </div>
-          ) : (
-            <div className="text-center">
+          </div>
+        ) : (
+            <div className="relative z-10 text-center">
               <div className="text-6xl mb-4">🥚</div>
-              <p className="text-xl text-gray-700 mb-4">你还没有宝可梦</p>
+              <p className="text-xl text-white font-bold mb-4 drop-shadow-lg">你还没有宝可梦</p>
               <button
                 onClick={() => setCurrentView('switch')}
-                className="px-6 py-3 bg-blue-500 text-white rounded-xl font-bold"
+                className="px-6 py-3 bg-blue-500 text-white rounded-xl font-bold shadow-lg active:scale-95 transition-transform"
               >
                 去领养宝可梦
               </button>
             </div>
           )}
-        </div>
 
-        {/* 底部菜单 */}
-        {selectedPokemon && (
-          <div className="bg-white/90 backdrop-blur p-4 grid grid-cols-4 gap-2">
-            <MenuButton
-              icon="🔄"
-              label="进化"
-              onClick={() => setCurrentView('evolution')}
-            />
-            <MenuButton
-              icon="🔀"
-              label="切换"
-              onClick={() => setCurrentView('switch')}
-            />
-            <MenuButton
-              icon="🏪"
-              label="商店"
-              onClick={() => setCurrentView('shop')}
-            />
-            <MenuButton
-              icon="🎮"
-              label="互动"
-              onClick={() => setCurrentView('interact')}
-            />
+        {/* 动画特效 */}
+        {animation === 'happy' && (
+          <div className="absolute inset-0 pointer-events-none z-20">
+            <div className="text-4xl absolute top-1/4 left-1/4 animate-ping">✨</div>
+            <div className="text-4xl absolute top-1/3 right-1/4 animate-ping" style={{animationDelay: '0.2s'}}>⭐</div>
+            <div className="text-4xl absolute bottom-1/3 left-1/3 animate-ping" style={{animationDelay: '0.4s'}}>💫</div>
           </div>
         )}
+
+        {animation === 'eating' && (
+          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 text-6xl animate-bounce z-20">🍎</div>
+        )}
+
+        {animation === 'drinking' && (
+          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 text-6xl animate-bounce z-20">💧</div>
+        )}
+
+        <style>{`
+          @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+          }
+          @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+          }
+          @keyframes wiggle {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-5deg); }
+            75% { transform: rotate(5deg); }
+          }
+          .animate-float {
+            animation: float 3s ease-in-out infinite;
+          }
+          .animate-shimmer {
+            animation: shimmer 2s infinite;
+          }
+          .animate-wiggle {
+            animation: wiggle 0.5s ease-in-out infinite;
+          }
+        `}</style>
       </div>
     )
   }
@@ -191,12 +287,12 @@ function StatBar({ label, value, emoji, color }) {
   }
 
   return (
-    <div className="mb-3 last:mb-0">
-      <div className="flex justify-between items-center mb-1">
-        <span className="text-sm font-medium text-gray-700">{emoji} {label}</span>
-        <span className="text-sm font-bold text-gray-800">{value}/100</span>
+    <div>
+      <div className="flex justify-between items-center mb-0.5">
+        <span className="text-[10px] font-semibold text-gray-700">{emoji} {label}</span>
+        <span className="text-[10px] font-bold text-gray-800">{value}/100</span>
       </div>
-      <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+      <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden border border-gray-300">
         <div
           className={`h-full ${colors[color]} transition-all duration-500`}
           style={{ width: `${value}%` }}
@@ -206,15 +302,15 @@ function StatBar({ label, value, emoji, color }) {
   )
 }
 
-// 菜单按钮组件
-function MenuButton({ icon, label, onClick }) {
+// 右侧功能按钮组件
+function ActionButton({ icon, label, bgColor, borderColor, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="flex flex-col items-center justify-center p-3 bg-gradient-to-br from-blue-500 to-purple-500 text-white rounded-xl active:scale-95 transition-transform"
+      className={`${bgColor} ${borderColor} border-2 rounded-xl w-14 h-14 flex flex-col items-center justify-center shadow-lg active:scale-95 transition-transform`}
     >
-      <div className="text-2xl mb-1">{icon}</div>
-      <div className="text-xs font-bold">{label}</div>
+      <div className="text-xl">{icon}</div>
+      <div className="text-[9px] font-bold text-white leading-tight">{label}</div>
     </button>
   )
 }

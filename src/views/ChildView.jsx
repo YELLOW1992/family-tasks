@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import ChildSelector from '../components/child/ChildSelector'
-import PokemonHome from '../components/child/PokemonHome'
+import ChildDashboard from '../components/child/ChildDashboard'
 
 export default function ChildView({ onExit }) {
   const [selectedChild, setSelectedChild] = useState(null)
@@ -9,5 +9,10 @@ export default function ChildView({ onExit }) {
     return <ChildSelector onSelect={setSelectedChild} onBack={onExit} />
   }
 
-  return <PokemonHome childId={selectedChild.id} />
+  return (
+    <ChildDashboard
+      child={selectedChild}
+      onExit={() => setSelectedChild(null)}
+    />
+  )
 }
