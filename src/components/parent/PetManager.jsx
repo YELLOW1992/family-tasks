@@ -3,53 +3,54 @@ import useStore from '../../store/useStore'
 
 const DAY_LABELS = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
 
-const PET_ICONS = ['🐶','🐱','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐸','🐧','🦜','🐢','🐠','🐇','🦋','🐝','🦔','🐾']
+const POKEMON_LIST = [
+  { name: '皮卡丘', dex: 25 }, { name: '妙蛙种子', dex: 1 }, { name: '小火龙', dex: 4 },
+  { name: '杰尼龟', dex: 7 }, { name: '伊布', dex: 133 }, { name: '卡比兽', dex: 143 },
+  { name: '喷火龙', dex: 6 }, { name: '水箭龟', dex: 9 }, { name: '妙蛙花', dex: 3 },
+  { name: '比雕', dex: 18 }, { name: '巴大蝶', dex: 12 }, { name: '大针蜂', dex: 15 }
+]
 const ITEM_ICONS = ['🍖','🦴','🐟','🥩','🍗','🥕','🍎','🎾','🧸','🪀','🛁','💊','🎀','🌿','🏠']
 
 function SpeciesForm({ initial, onSave, onCancel }) {
-  const [name, setName] = useState(initial?.name || '')
-  const [description, setDescription] = useState(initial?.description || '')
-  const [icon, setIcon] = useState(initial?.icon || '🐱')
+  const [selectedPokemon, setSelectedPokemon] = useState(initial?.name || '')
   const [cost, setCost] = useState(initial?.cost ?? 50)
-  const [showIcons, setShowIcons] = useState(false)
+  const [showList, setShowList] = useState(false)
 
   const handleSave = () => {
-    if (!name.trim() || cost <= 0) return
-    onSave({ name: name.trim(), description: description.trim(), icon, cost: Number(cost) })
+    if (!selectedPokemon || cost <= 0) return
+    const pokemon = POKEMON_LIST.find(p => p.name === selectedPokemon)
+    onSave({
+      name: selectedPokemon,
+      description: `图鉴编号: ${String(pokemon.dex).padStart(3, '0')}`,
+      icon: '🎴',
+      cost: Number(cost)
+    })
   }
 
   return (
     <div className="bg-gray-50 rounded-2xl p-4 flex flex-col gap-3">
       <div className="flex items-center gap-3">
         <button
-          onClick={() => setShowIcons(!showIcons)}
-          className="text-4xl w-14 h-14 rounded-2xl bg-white border-2 border-gray-200 flex items-center justify-center"
+          onClick={() => setShowList(!showList)}
+          className="px-4 py-2 rounded-xl bg-white border-2 border-gray-200 font-semibold text-sm"
         >
-          {icon}
+          {selectedPokemon || '选择宝可梦'}
         </button>
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="宠物种类名称（如：小猫）"
-          className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-base"
-        />
       </div>
-      {showIcons && (
-        <div className="flex flex-wrap gap-2 bg-white rounded-2xl p-3 border border-gray-200">
-          {PET_ICONS.map((ic) => (
-            <button key={ic} onClick={() => { setIcon(ic); setShowIcons(false) }}
-              className="text-2xl w-10 h-10 rounded-xl flex items-center justify-center active:bg-indigo-100">
-              {ic}
+      {showList && (
+        <div className="grid grid-cols-2 gap-2 bg-white rounded-2xl p-3 border border-gray-200 max-h-60 overflow-y-auto">
+          {POKEMON_LIST.map((pokemon) => (
+            <button
+              key={pokemon.name}
+              onClick={() => { setSelectedPokemon(pokemon.name); setShowList(false) }}
+              className="text-left px-3 py-2 rounded-xl hover:bg-indigo-50 active:bg-indigo-100"
+            >
+              <div className="font-semibold">{pokemon.name}</div>
+              <div className="text-xs text-gray-500">No.{String(pokemon.dex).padStart(3, '0')}</div>
             </button>
           ))}
         </div>
       )}
-      <input
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        placeholder="描述（可选）"
-        className="border border-gray-200 rounded-xl px-3 py-2 text-sm"
-      />
       <div className="flex items-center gap-2">
         <label className="text-sm text-gray-600 font-semibold">领养积分：</label>
         <input
@@ -164,8 +165,8 @@ export default function PetManager() {
   }
 
   const TABS = [
-    { id: 'species', label: '宠物种类', icon: '🐾' },
-    { id: 'items',   label: '宠物用品', icon: '🎁' },
+    { id: 'species', label: '宝可梦', icon: '🎴' },
+    { id: 'items',   label: '道具', icon: '🎁' },
     { id: 'schedule',label: '开放时间', icon: '⏰' },
   ]
 
@@ -190,7 +191,7 @@ export default function PetManager() {
       {tab === 'species' && (
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-bold text-gray-700">可领养宠物</h3>
+            <h3 className="text-lg font-bold text-gray-700">可领养宝可梦</h3>
             <button onClick={() => setAddingSpecies(true)} className="px-4 py-2 rounded-xl bg-indigo-600 text-white font-bold text-sm">+ 添加</button>
           </div>
           {addingSpecies && (
@@ -202,7 +203,7 @@ export default function PetManager() {
             </div>
           )}
           {petSpecies.length === 0 && !addingSpecies && (
-            <div className="text-center py-12 text-gray-400"><div className="text-5xl mb-3">🐾</div><p>暂无宠物种类</p></div>
+            <div className="text-center py-12 text-gray-400"><div className="text-5xl mb-3">🎴</div><p>暂无宝可梦</p></div>
           )}
           <div className="flex flex-col gap-3">
             {petSpecies.map((s) => (

@@ -423,6 +423,10 @@ const useStore = create((set, get) => ({
     await supabase.from('pet_redemptions').update({ used: true }).eq('id', itemRedemptionId)
     set({ ownedPets: await fetchOwnedPets(), petRedemptions: await fetchPetRedemptions() })
   },
+
+  // 导出 fetch 函数供组件使用
+  fetchOwnedPets,
+  fetchPetSpecies,
 }))
 
 export default useStore
