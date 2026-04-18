@@ -1,5 +1,0 @@
-open scp://root:zhiwu183.@118.196.117.4
-cd /var/www/html
-lcd C:\Users\Administrator\family-tasks\dist
-put *
-exit
